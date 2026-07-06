@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Krio Griot — Legacy Research &amp; Genealogy Collection Management</title>
+  <meta name="description" content="Krio Griot is a legacy research and genealogy collection management platform built for African American family history researchers. Search 100+ databases, manage your archives, track DNA matches, and build a living record of your ancestors." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="landing.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     TOP NAVIGATION
+═════════════════════════════════════════════════════════════════════════ -->
+<header class="site-nav" id="site-nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <svg class="logo-tree-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Buttress roots & trunk -->
+        <path d="M14 31 Q12 28 11.5 25 Q11 22 12.5 20 L15 19.5 L15.5 31Z" fill="currentColor" opacity=".85"/>
+        <path d="M18 31 Q20 28 20.5 25 Q21 22 19.5 20 L17 19.5 L16.5 31Z" fill="currentColor" opacity=".85"/>
+        <path d="M15 31 L17 31 L16.8 20 Q16.2 19 16 18.9 Q15.8 19 15.2 20Z" fill="currentColor"/>
+        <!-- Spreading branches -->
+        <path d="M15.2 22 Q11 21 7 21.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M16.8 22 Q21 21 25 21.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M15 20 Q12 18 9 17"  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M17 20 Q20 18 23 17" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- Canopy -->
+        <circle cx="16" cy="12" r="8"   fill="currentColor"/>
+        <circle cx="9"  cy="15" r="5.5" fill="currentColor"/>
+        <circle cx="23" cy="15" r="5.5" fill="currentColor"/>
+        <circle cx="16" cy="7"  r="5.5" fill="currentColor"/>
+        <circle cx="11" cy="10" r="4.5" fill="currentColor"/>
+        <circle cx="21" cy="10" r="4.5" fill="currentColor"/>
+        <circle cx="6"  cy="19" r="4"   fill="currentColor"/>
+        <circle cx="26" cy="19" r="4"   fill="currentColor"/>
+      </svg>
+      <div>
+        Krio Griot
+        <span class="logo-sub">Legacy Research &amp; Genealogy Collection Management</span>
+      </div>
+    </a>
+    <nav class="nav-links">
+      <a href="#about">About</a>
+      <a href="#brick-wall">The 1870 Wall</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="nav-spacer"></div>
+    <div class="nav-ctas">
+      <button class="btn btn-ghost btn-sm" onclick="openModal('login-modal')">Log In</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('signup-modal')">Create Account</button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     HERO
+═════════════════════════════════════════════════════════════════════════ -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+
+  <!-- Cotton Tree of Freetown — Sierra Leone -->
+  <div class="hero-cotton-tree" aria-hidden="true">
+    <svg viewBox="0 0 500 580" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+      <!-- Buttress roots -->
+      <path d="M210 580 Q196 552 190 520 Q185 494 194 466 L220 454 L224 580Z" fill="#c9a84c"/>
+      <path d="M290 580 Q304 552 310 520 Q315 494 306 466 L280 454 L276 580Z" fill="#c9a84c"/>
+      <path d="M220 580 L280 580 L276 458 Q263 444 250 442 Q237 444 224 458Z" fill="#c9a84c"/>
+      <!-- Trunk -->
+      <path d="M224 458 Q220 416 222 374 Q224 334 226 294 L250 283 L274 294 Q276 334 278 374 Q280 416 276 458Z" fill="#c9a84c"/>
+      <!-- Far left branches -->
+      <path d="M226 348 Q186 326 140 316 Q98 308 58 312 Q74 302 114 298 Q156 294 208 313 Q228 323 232 343Z" fill="#c9a84c"/>
+      <path d="M226 378 Q178 366 122 368 Q84 370 50 382 Q68 373 106 370 Q156 366 222 381Z" fill="#c9a84c"/>
+      <!-- Far right branches -->
+      <path d="M274 348 Q314 326 360 316 Q402 308 442 312 Q426 302 386 298 Q344 294 292 313 Q272 323 268 343Z" fill="#c9a84c"/>
+      <path d="M274 378 Q322 366 378 368 Q416 370 450 382 Q432 373 394 370 Q344 366 278 381Z" fill="#c9a84c"/>
+      <!-- Upper left branch -->
+      <path d="M232 306 Q200 280 166 260 Q136 242 128 220 Q146 230 172 248 Q202 268 240 297Z" fill="#c9a84c"/>
+      <!-- Upper right branch -->
+      <path d="M268 306 Q300 280 334 260 Q364 242 372 220 Q354 230 328 248 Q298 268 260 297Z" fill="#c9a84c"/>
+      <!-- Upper center trunk -->
+      <path d="M242 290 Q240 260 243 236 L250 224 L257 236 Q260 260 258 290Z" fill="#c9a84c"/>
+      <!-- Canopy — organic overlapping domes -->
+      <ellipse cx="250" cy="152" rx="115" ry="98" fill="#c9a84c"/>
+      <ellipse cx="148" cy="192" rx="90" ry="74" fill="#c9a84c"/>
+      <ellipse cx="352" cy="192" rx="90" ry="74" fill="#c9a84c"/>
+      <ellipse cx="250" cy="88"  rx="78" ry="64" fill="#c9a84c"/>
+      <ellipse cx="178" cy="112" rx="68" ry="57" fill="#c9a84c"/>
+      <ellipse cx="322" cy="112" rx="68" ry="57" fill="#c9a84c"/>
+      <ellipse cx="82"  cy="240" rx="64" ry="52" fill="#c9a84c"/>
+      <ellipse cx="418" cy="240" rx="64" ry="52" fill="#c9a84c"/>
+      <ellipse cx="114" cy="194" rx="56" ry="46" fill="#c9a84c"/>
+      <ellipse cx="386" cy="194" rx="56" ry="46" fill="#c9a84c"/>
+      <ellipse cx="212" cy="70"  rx="54" ry="46" fill="#c9a84c"/>
+      <ellipse cx="288" cy="70"  rx="54" ry="46" fill="#c9a84c"/>
+      <ellipse cx="250" cy="52"  rx="46" ry="40" fill="#c9a84c"/>
+    </svg>
+  </div>
+
+  <div class="hero-inner">
+    <!-- Left: Content -->
+    <div class="hero-content">
+      <div class="hero-eyebrow">Purpose-Built for African American Genealogical Research</div>
+      <h1 class="hero-title">
+        The Records Exist.<br>Your Ancestors'<br>Stories Are <em>Waiting.</em>
+      </h1>
+      <p class="hero-sub">
+        Krio Griot is the only platform built to cross the 1870 Brick Wall —
+        an AI research agent, a relational family database, and a digital archive system
+        working together as a single connected workspace that replaces every paper worksheet
+        you've ever had to fill out by hand.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary btn-lg" onclick="openModal('signup-modal')">
+          Start for Free
+        </button>
+        <a href="#brick-wall" class="btn btn-outline btn-lg">See the Approach</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-num">100+</div>
+          <div class="hero-stat-label">Specialized Databases</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">4</div>
+          <div class="hero-stat-label">Linked Record Systems</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">1870</div>
+          <div class="hero-stat-label">Wall — Crossed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Decorative card stack showing the four databases -->
+    <div class="hero-visual">
+      <div class="hero-tree">
+        <div class="hero-card-stack">
+          <!-- Ancestor profile card -->
+          <div class="ancestor-card">
+            <div class="ac-line">Ancestors Directory</div>
+            <div class="ac-name">Elias Perrin · Gen. 4 · Paternal</div>
+            <div class="ac-dates">c. 1848, Alabama · Status: Enslaved → Free</div>
+            <span class="ac-badge verified">Linked to 3 events · 2 sources</span>
+          </div>
+          <!-- Research log entry -->
+          <div class="ancestor-card">
+            <div class="ac-line">Research Log · Auto-Generated</div>
+            <div class="ac-name">Freedmen's Bureau Search</div>
+            <div class="ac-dates">Searched: Alabama, 1865–1868 · Status: Found</div>
+            <span class="ac-badge verified">Labor contract record located</span>
+          </div>
+          <!-- Archive scanner result -->
+          <div class="ancestor-card">
+            <div class="ac-line">Archive Scanner · Auto-Extracted</div>
+            <div class="ac-name">Manumission Deed, 1863</div>
+            <div class="ac-dates">Parties: 3 · Location: 1 · Date: 1 · Auto-saved</div>
+            <span class="ac-badge pending">Awaiting link to ancestor</span>
+          </div>
+          <!-- Family tree entry -->
+          <div class="ancestor-card">
+            <div class="ac-line">Family Tree · GEDCOM Import</div>
+            <div class="ac-name">Aisha Abdul Rahman · Gen. 0 · Self</div>
+            <div class="ac-dates">Parents linked · 2,959 relatives · 5 generations</div>
+            <span class="ac-badge verified">Tree built from GEDCOM + manual edits</span>
+          </div>
+          <!-- Collection management entry -->
+          <div class="ancestor-card">
+            <div class="ac-line">Collection Management · Digitized</div>
+            <div class="ac-name">Dixon–Queen Family Archive</div>
+            <div class="ac-dates">47 items · Photos, Deeds, Letters · Tagged</div>
+            <span class="ac-badge verified">Linked to 12 ancestors · 3 events</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     ABOUT
+═════════════════════════════════════════════════════════════════════════ -->
+<section class="about" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <!-- Text -->
+      <div>
+        <div class="about-label">What It Does</div>
+        <h2 class="about-title">Three Powerful Tools. One Connected Workspace.</h2>
+        <div class="about-body">
+          <p>
+            Krio Griot is built around three interlocking components that work together in a
+            single interface — replacing every paper genealogy worksheet you've ever used with an
+            automated, interconnected system that thinks the way a serious researcher does.
+          </p>
+
+          <!-- Component 1 -->
+          <div class="about-component">
+            <div class="about-component-label">Component 1 · Research Assistant</div>
+            <p>
+              Describe an ancestor and the research engine searches 100+ specialized
+              genealogical databases simultaneously. Every search is automatically recorded in a
+              structured research log — including databases checked, keywords used, and whether
+              results were positive or negative. It works as a background processor: reading,
+              extracting, formatting, and populating your database cells without manual data entry.
+            </p>
+          </div>
+
+          <!-- Component 2 -->
+          <div class="about-component">
+            <div class="about-component-label">Component 2 · Digital Collection Management</div>
+            <p>
+              Upload a scanned document, photograph, or PDF. The Archive Scanner runs text
+              recognition on the file, then identifies historical facts, extracts names, dates,
+              and locations, and auto-fills the proper archival metadata fields. Your digitized
+              collection becomes a searchable, linked database instead of a folder of
+              disconnected files.
+            </p>
+          </div>
+
+          <!-- Component 3 -->
+          <div class="about-component" style="border-left-color:rgba(100,160,220,.5);">
+            <div class="about-component-label" style="color:#6fa8d6;">Component 3 · Interactive Family Tree</div>
+            <p>
+              Import your GEDCOM file from Ancestry, FamilySearch, or Geni and every person,
+              family connection, and date loads instantly into an interactive pedigree chart.
+              Pan, zoom, search by name, expand or collapse any branch, and click any card to
+              edit that person's full research profile. Relationships that are missing can be
+              connected directly on the tree — no separate spreadsheet required.
+            </p>
+          </div>
+
+          <!-- Database pill list -->
+          <div class="about-databases">
+            <div class="about-db-label">Four interconnected databases — structured like Airtable:</div>
+            <div class="about-db-pills">
+              <span class="db-pill">Ancestors Directory</span>
+              <span class="db-pill">Historical Events Timeline</span>
+              <span class="db-pill">Research Log</span>
+              <span class="db-pill">Digital Archive</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual: two-component diagram -->
+      <div class="about-visual">
+        <div class="about-art">
+          <svg class="family-tree-svg" viewBox="0 0 320 440" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Research Assistant box -->
+            <rect x="10" y="20" width="90" height="52" rx="8" fill="#1c1914" stroke="#c9a84c" stroke-width="1.5"/>
+            <text x="55" y="43" text-anchor="middle" font-size="8" fill="#c9a84c" font-family="Inter" font-weight="700">RESEARCH</text>
+            <text x="55" y="56" text-anchor="middle" font-size="7.5" fill="#8a8070" font-family="Inter">ASSISTANT</text>
+
+            <!-- Archive Scanner box -->
+            <rect x="115" y="20" width="90" height="52" rx="8" fill="#1c1914" stroke="#4caf7d" stroke-width="1.5"/>
+            <text x="160" y="43" text-anchor="middle" font-size="8" fill="#4caf7d" font-family="Inter" font-weight="700">ARCHIVE</text>
+            <text x="160" y="56" text-anchor="middle" font-size="7.5" fill="#8a8070" font-family="Inter">SCANNER</text>
+
+            <!-- Family Tree box -->
+            <rect x="220" y="20" width="90" height="52" rx="8" fill="#1c1914" stroke="#6fa8d6" stroke-width="1.5"/>
+            <text x="265" y="43" text-anchor="middle" font-size="8" fill="#6fa8d6" font-family="Inter" font-weight="700">FAMILY</text>
+            <text x="265" y="56" text-anchor="middle" font-size="7.5" fill="#8a8070" font-family="Inter">TREE</text>
+
+            <!-- Connector lines to databases -->
+            <line x1="55"  y1="72" x2="55"  y2="118" stroke="#2d2820" stroke-width="1"/>
+            <line x1="160" y1="72" x2="160" y2="118" stroke="#2d2820" stroke-width="1"/>
+            <line x1="265" y1="72" x2="265" y2="118" stroke="#2d2820" stroke-width="1"/>
+
+            <!-- Horizontal bus line -->
+            <line x1="55" y1="118" x2="265" y2="118" stroke="#2d2820" stroke-width="1"/>
+
+            <!-- Four database boxes -->
+            <rect x="10"  y="128" width="130" height="48" rx="8" fill="#1c1914" stroke="#2d2820" stroke-width="1.5"/>
+            <text x="75"  y="150" text-anchor="middle" font-size="8.5" fill="#ede8de" font-family="Inter" font-weight="600">Ancestors</text>
+            <text x="75"  y="164" text-anchor="middle" font-size="7.5" fill="#8a8070" font-family="Inter">Directory</text>
+
+            <rect x="180" y="128" width="130" height="48" rx="8" fill="#1c1914" stroke="#2d2820" stroke-width="1.5"/>
+            <text x="245" y="150" text-anchor="middle" font-size="8.5" fill="#ede8de" font-family="Inter" font-weight="600">Research Log</text>
+            <text x="245" y="164" text-anchor="middle" font-size="7.5" fill="#8a8070" font-family="Inter">&#38; Sources</text>
+
+            <rect x="10"  y="228" width="130" height="48" rx="8" fill="#1c1914" stroke="#2d2820" stroke-width="1.5"/>
+            <text x="75"  y="250" text-anchor="middle" font-size="8.5" fill="#ede8de" font-family="Inter" font-weight="600">Digital</text>
+            <text x="75"  y="264" text-anchor="middle" font-size="7.5" fill="#8a8070" font-family="Inter">Archive</text>
+
+            <rect x="180" y="228" width="130" height="48" rx="8" fill="#1c1914" stroke="#2d2820" stroke-width="1.5"/>
+            <text x="245" y="250" text-anchor="middle" font-size="8.5" fill="#ede8de" font-family="Inter" font-weight="600">DNA Testing</text>
+            <text x="245" y="264" text-anchor="middle" font-size="7.5" fill="#8a8070" font-family="Inter">&#38; Matches</text>
+
+            <!-- Cross-links between databases -->
+            <line x1="140" y1="152" x2="180" y2="152" stroke="#2d2820" stroke-width="1" stroke-dasharray="3 3"/>
+            <line x1="140" y1="252" x2="180" y2="252" stroke="#2d2820" stroke-width="1" stroke-dasharray="3 3"/>
+            <line x1="75"  y1="176" x2="75"  y2="228" stroke="#2d2820" stroke-width="1" stroke-dasharray="3 3"/>
+            <line x1="245" y1="176" x2="245" y2="228" stroke="#2d2820" stroke-width="1" stroke-dasharray="3 3"/>
+
+            <!-- Family tree mini pedigree chart illustration -->
+            <rect x="68"  y="310" width="184" height="90" rx="8" fill="rgba(111,168,214,.04)" stroke="rgba(111,168,214,.2)" stroke-width="1" stroke-dasharray="4 3"/>
+            <rect x="78"  y="320" width="62" height="28" rx="5" fill="#1a1712" stroke="rgba(201,168,76,.3)" stroke-width="1"/>
+            <text x="109" y="339" text-anchor="middle" font-size="7" fill="#c9a84c" font-family="Inter" font-weight="600">Self</text>
+            <rect x="158" y="308" width="62" height="28" rx="5" fill="#1a1712" stroke="rgba(201,168,76,.2)" stroke-width="1"/>
+            <text x="189" y="327" text-anchor="middle" font-size="7" fill="#8a8070" font-family="Inter">Father</text>
+            <rect x="158" y="344" width="62" height="28" rx="5" fill="#1a1712" stroke="rgba(201,168,76,.2)" stroke-width="1"/>
+            <text x="189" y="363" text-anchor="middle" font-size="7" fill="#8a8070" font-family="Inter">Mother</text>
+            <line x1="140" y1="334" x2="158" y2="322" stroke="rgba(201,168,76,.3)" stroke-width="1"/>
+            <line x1="140" y1="334" x2="158" y2="358" stroke="rgba(201,168,76,.3)" stroke-width="1"/>
+
+            <!-- Research engine processor badge -->
+            <rect x="75" y="408" width="170" height="26" rx="7" fill="rgba(201,168,76,.07)" stroke="rgba(201,168,76,.22)" stroke-width="1"/>
+            <text x="160" y="425" text-anchor="middle" font-size="7.5" fill="#c9a84c" font-family="Inter" font-weight="700">Research Engine — Background Processor</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     1870 BRICK WALL
+═════════════════════════════════════════════════════════════════════════ -->
+<section class="brick-wall" id="brick-wall">
+  <div class="container">
+
+    <div class="bw-header">
+      <div class="section-eyebrow">The Hardest Problem in American Genealogy</div>
+      <h2 class="bw-title">Built to Cross the <span class="bw-highlight">1870 Brick Wall</span></h2>
+      <p class="bw-sub">
+        The 1870 Federal Census was the first to name formerly enslaved people as free individuals.
+        For millions of African American families, that's where standard genealogy tools stop.
+        Krio Griot is built to go further — organizing and cross-referencing the specialized
+        record sets that document Black lives before, during, and immediately after emancipation.
+      </p>
+    </div>
+
+    <!-- Wall concept divider -->
+    <div class="bw-timeline">
+      <div class="bw-before-block">
+        <div class="bw-era-label">Before 1870</div>
+        <p class="bw-era-desc">Enslaved individuals were counted but not named in census records. Standard genealogy platforms have no path forward from here.</p>
+      </div>
+      <div class="bw-wall-divider">
+        <div class="bw-wall-line-vis"></div>
+        <div class="bw-wall-badge">THE<br>WALL</div>
+        <div class="bw-wall-line-vis"></div>
+      </div>
+      <div class="bw-after-block">
+        <div class="bw-era-label">Reconstruction Era Records</div>
+        <p class="bw-era-desc">Five specialized record sets that name your ancestors — and Krio Griot is purpose-built to search, extract, and organize all of them.</p>
+      </div>
+    </div>
+
+    <!-- Five record type cards -->
+    <div class="bw-records-grid">
+
+      <div class="bw-record-card">
+        <div class="bw-record-name">Freedmen's Bureau Records</div>
+        <div class="bw-record-dates">1865 – 1872</div>
+        <p class="bw-record-desc">
+          Labor contracts, marriage registers, apprenticeship records, ration rolls, and medical
+          logs created by the Bureau of Refugees, Freedmen, and Abandoned Lands. Often the
+          earliest documentary evidence of an ancestor's full name, family structure, and location.
+        </p>
+        <div class="bw-record-extracts">
+          <span>Full names</span><span>Family members</span><span>Plantation of origin</span><span>Labor terms</span>
+        </div>
+      </div>
+
+      <div class="bw-record-card">
+        <div class="bw-record-name">Antebellum Slave Schedules</div>
+        <div class="bw-record-dates">1850 &amp; 1860 Census</div>
+        <p class="bw-record-desc">
+          The schedules don't use names — but Krio Griot cross-references age, sex, and
+          physical descriptions against known slaveholders, neighboring plantations, and post-war
+          Freedmen's Bureau records to build a bridge across the anonymity gap.
+        </p>
+        <div class="bw-record-extracts">
+          <span>Age matching</span><span>Slaveholder links</span><span>County cross-reference</span>
+        </div>
+      </div>
+
+      <div class="bw-record-card">
+        <div class="bw-record-name">Freedom Certificates &amp; Manumission Records</div>
+        <div class="bw-record-dates">1780s – 1865</div>
+        <p class="bw-record-desc">
+          Court registries, deeds of freedom, and physical description records documenting free
+          people of color before emancipation. These records frequently include family relationships,
+          ages, and the name of the person who granted freedom — a critical link to slaveholder records.
+        </p>
+        <div class="bw-record-extracts">
+          <span>Physical descriptions</span><span>Deed references</span><span>Grantor names</span>
+        </div>
+      </div>
+
+      <div class="bw-record-card">
+        <div class="bw-record-name">Freedman's Savings &amp; Trust Bank Registers</div>
+        <div class="bw-record-dates">1865 – 1874</div>
+        <p class="bw-record-desc">
+          The most genealogically rich Reconstruction-era record set. Each depositor entry lists
+          immediate family members by name, military regiment, birthplace, former enslaver, and
+          current address — a single bank record can unlock an entire family branch.
+        </p>
+        <div class="bw-record-extracts">
+          <span>Immediate kinship</span><span>USCT regiment</span><span>Birthplace</span><span>Former enslaver</span>
+        </div>
+      </div>
+
+      <div class="bw-record-card">
+        <div class="bw-record-name">"Information Wanted" Advertisements</div>
+        <div class="bw-record-dates">1865 – 1900</div>
+        <p class="bw-record-desc">
+          Published in Black newspapers — primarily the <em>Christian Recorder</em> and the
+          <em>Southwestern Christian Advocate</em> — by freedpeople searching for family members
+          separated during slavery. These ads name individuals, former slaveholders, and last
+          known locations, making them a powerful migration and separation tracker.
+        </p>
+        <div class="bw-record-extracts">
+          <span>Migration routes</span><span>Separation events</span><span>Last known location</span>
+        </div>
+      </div>
+
+    </div><!-- /bw-records-grid -->
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     FEATURES
+═════════════════════════════════════════════════════════════════════════ -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="features-header">
+      <div class="section-eyebrow">Platform Architecture</div>
+      <h2 class="features-title">Three Components. Four Databases. One Workspace.</h2>
+      <p class="features-sub">
+        Built like Airtable for genealogy — every record is editable in-cell, every table is
+        linked to every other, and the research engine works silently in the background so you
+        spend time on research, not data entry.
+      </p>
+    </div>
+
+    <!-- ── Two Core Components (pillars) ─────────────────────────────────── -->
+    <div class="features-pillars">
+
+      <div class="pillar-card pillar-research">
+        <div class="pillar-header">
+          <div class="pillar-num">01</div>
+          <div class="pillar-label">
+            <div class="pillar-eyebrow">Component One</div>
+            <h3 class="pillar-title">Research Assistant</h3>
+          </div>
+        </div>
+        <p class="pillar-desc">
+          Enter an ancestor's name and known details. The research engine searches over 100
+          specialized databases simultaneously — Freedmen's Bureau, census archives, USCT
+          military rolls, slave schedules, church registers, DNA databases, newspaper archives,
+          and state repositories — then streams results back in real time with source citations
+          and follow-up research questions.
+        </p>
+        <p class="pillar-desc">
+          Unlike a chatbot, it doesn't wait for prompts. It reads the search results,
+          identifies relevant records, extracts the historical facts, and writes the data
+          directly into your research log and ancestor profiles. Every search is permanently
+          recorded — what was searched, what was found, and what still needs to be answered.
+        </p>
+        <div class="pillar-tags">
+          <span class="feature-tag tag-ai">Automated Research</span>
+          <span class="feature-tag tag-free" style="margin-left:6px;">Available Free</span>
+        </div>
+      </div>
+
+      <div class="pillar-card pillar-archive">
+        <div class="pillar-header">
+          <div class="pillar-num pillar-num-green">02</div>
+          <div class="pillar-label">
+            <div class="pillar-eyebrow">Component Two</div>
+            <h3 class="pillar-title">Digital Collection Management</h3>
+          </div>
+        </div>
+        <p class="pillar-desc">
+          Upload a scanned photograph, a handwritten letter, a census page, or a multi-page
+          PDF. The Archive Scanner runs OCR on the file and the research engine identifies every
+          historical fact, formats it against archival standards, and auto-populates the
+          metadata fields. No manual typing.
+        </p>
+        <p class="pillar-desc">
+          Organize scanned items into named collections, build digital exhibits for your family,
+          and publish them publicly or privately. Every archive item automatically links to the
+          ancestors it mentions and the research questions it answers — creating a fully
+          cross-referenced family history library.
+        </p>
+        <div class="pillar-tags">
+          <span class="feature-tag tag-ai">Vision + OCR</span>
+          <span class="feature-tag tag-pro" style="margin-left:6px;">Basic &amp; Upgrade</span>
+        </div>
+      </div>
+
+      <div class="pillar-card pillar-tree">
+        <div class="pillar-header">
+          <div class="pillar-num pillar-num-blue">03</div>
+          <div class="pillar-label">
+            <div class="pillar-eyebrow">Component Three</div>
+            <h3 class="pillar-title">Interactive Family Tree</h3>
+          </div>
+        </div>
+        <p class="pillar-desc">
+          Import your GEDCOM file exported from Ancestry.com, FamilySearch, or Geni and your
+          entire family tree — every person, every relationship, every date — loads instantly
+          into an interactive pedigree chart. Pan and zoom across hundreds of generations,
+          search by name to center the view on any ancestor, and expand or collapse individual
+          branches to focus your research.
+        </p>
+        <p class="pillar-desc">
+          Click any card to open that person's full research profile — editing names, dates,
+          places, notes, and linked sources without leaving the tree. For relationships that
+          are incomplete or missing, Edit Mode lets you connect a parent directly on the canvas:
+          search for the father or mother by name, select them, save — and the branch
+          redraws immediately.
+        </p>
+        <div class="pillar-tags">
+          <span class="feature-tag tag-tree">GEDCOM Import</span>
+          <span class="feature-tag tag-free" style="margin-left:6px;">Available Free</span>
+        </div>
+      </div>
+
+    </div><!-- /features-pillars -->
+
+    <!-- ── Four Core Databases ────────────────────────────────────────────── -->
+    <div class="databases-header">
+      <div class="section-eyebrow">Four Interconnected Databases</div>
+      <p class="databases-sub">
+        Each table is editable directly inside cells — filter, sort, bulk-select, and edit
+        without opening a separate form. Every record across every table is linked.
+      </p>
+    </div>
+
+    <div class="databases-grid">
+
+      <div class="db-card">
+        <div class="db-card-header">
+          <div>
+            <div class="db-name">Ancestors Directory</div>
+            <div class="db-tagline">One row per unique individual</div>
+          </div>
+        </div>
+        <p class="db-desc">
+          The central directory for every person in your family tree. Each row tracks an
+          individual's name, life status (Enslaved / Free Person of Color / Post-Emancipation),
+          birth and death dates, family connections, DNA test matches with shared cMs, and
+          links to parents, spouses, and children that generate a digital family tree.
+        </p>
+        <div class="db-fields">
+          <span>Name &amp; aliases</span><span>Life status</span><span>Birth / death / burial</span>
+          <span>Family links</span><span>DNA cM values</span><span>Generation &amp; line</span>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-card-header">
+          <div>
+            <div class="db-name">Historical Events Timeline</div>
+            <div class="db-tagline">One row per life event</div>
+          </div>
+        </div>
+        <p class="db-desc">
+          Every significant moment in an ancestor's life gets its own row — a birth event,
+          a land deed, an enlistment record, an emancipation filing, a marriage registration.
+          Rows stack chronologically to build a clear, evidence-based life story map with
+          source citations attached to each event.
+        </p>
+        <div class="db-fields">
+          <span>Event type</span><span>Event date</span><span>Location</span>
+          <span>Source citation</span><span>Linked ancestor</span><span>Evidence quality</span>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-card-header">
+          <div>
+            <div class="db-name">Research Log</div>
+            <div class="db-tagline">Continuous audit trail</div>
+          </div>
+        </div>
+        <p class="db-desc">
+          A permanent record of every research action taken — auto-generated by the AI agent
+          or manually entered. Tracks which databases were searched, what keywords were used,
+          the search date, the result status (found / not found / inconclusive), and the
+          open research questions still waiting to be answered.
+        </p>
+        <div class="db-fields">
+          <span>Research question</span><span>Databases searched</span><span>Keywords used</span>
+          <span>Result status</span><span>Linked ancestor</span><span>GPS checklist</span>
+        </div>
+      </div>
+
+      <div class="db-card">
+        <div class="db-card-header">
+          <div>
+            <div class="db-name">Digital Archive</div>
+            <div class="db-tagline">Scanned files + AI-generated metadata</div>
+          </div>
+        </div>
+        <p class="db-desc">
+          Where your uploaded files live as permanent archival records. Each row stores the
+          original scanned file, the raw transcribed text extracted from it, the standardized
+          metadata tags generated automatically, and automatic links to every ancestor mentioned in
+          the document — creating a fully searchable digital family library.
+        </p>
+        <div class="db-fields">
+          <span>Uploaded file</span><span>OCR transcript</span><span>AI metadata</span>
+          <span>Format &amp; condition</span><span>Linked ancestors</span><span>Collection</span>
+        </div>
+      </div>
+
+    </div><!-- /databases-grid -->
+
+    <!-- Research engine callout -->
+    <div class="claude-callout">
+      <div>
+        <div class="claude-callout-title">Intelligent automation works as a background processor, not a chatbot</div>
+        <div class="claude-callout-body">
+          When a document is uploaded or a search is run, the research engine reads the raw output, extracts
+          the relevant historical facts, formats them to the correct database fields, and saves
+          the data automatically. No prompts required. No copy-pasting. No manual transcription.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     PRICING
+═════════════════════════════════════════════════════════════════════════ -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="pricing-header">
+      <div class="section-eyebrow">Plans &amp; Pricing</div>
+      <h2 class="pricing-title">Start Free. Go Deeper When You're Ready.</h2>
+      <p class="pricing-sub">
+        Every account begins as a free digital workspace. Upgrade as your research grows —
+        unlocking AI automation, expanded databases, and unlimited archival storage.
+      </p>
+      <!-- Annual toggle -->
+      <div class="pricing-toggle">
+        <span class="toggle-label" id="toggle-monthly-label" style="color:var(--text);">Monthly</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="billing-toggle" onchange="toggleBilling(this)" />
+          <span class="toggle-track"></span>
+        </label>
+        <span class="toggle-label" id="toggle-annual-label">Annual</span>
+        <span class="annual-badge hidden" id="annual-badge">Save ~17%</span>
+      </div>
+    </div>
+
+    <!-- ── Three pricing cards ───────────────────────────────────────────── -->
+    <div class="pricing-grid-3">
+
+      <!-- ── FREE ─────────────────────────────────────────────────────────── -->
+      <div class="pricing-card pc-free">
+        <div class="pricing-label">Starter</div>
+        <h3>Free</h3>
+        <div class="pricing-price">
+          <span class="price-num price-free">$0</span>
+          <span class="price-period">/ forever</span>
+        </div>
+        <p class="pricing-desc">
+          The digital replacement for paper genealogy worksheets. Build your tree, enter
+          records manually, and get a firsthand look at what AI can do.
+        </p>
+        <div class="pricing-divider"></div>
+
+        <div class="pricing-section-head">What's included</div>
+        <ul class="pricing-features">
+          <li class="active-feature"><span class="check">✓</span> Interactive family tree with GEDCOM import</li>
+          <li class="active-feature"><span class="check">✓</span> Edit &amp; connect relationships directly on the tree</li>
+          <li class="active-feature"><span class="check">✓</span> DNA match entry forms (manual)</li>
+          <li class="active-feature"><span class="check">✓</span> 5–10 public-domain database searches</li>
+          <li class="active-feature"><span class="check">✓</span> <strong>3–5 Archive Scanner AI scans</strong> (lifetime preview)</li>
+          <li class="active-feature"><span class="check">✓</span> View digital exhibits created by others</li>
+          <li class="active-feature"><span class="check">✓</span> 250–500 MB cloud storage</li>
+        </ul>
+
+        <div class="pricing-section-head off-head">What's not included</div>
+        <ul class="pricing-features">
+          <li><span class="cross">—</span> Automated research logging</li>
+          <li><span class="cross">—</span> Persistent research log &amp; source database</li>
+          <li><span class="cross">—</span> Unlimited Archive Scanner scans</li>
+          <li><span class="cross">—</span> Create or publish digital exhibits</li>
+        </ul>
+
+        <div class="upgrade-trigger-box">
+          <span>After your 5th scan, you'll see exactly how much time the research engine saves — and a direct path to unlock unlimited scanning.</span>
+        </div>
+
+        <button class="btn btn-outline pricing-cta" onclick="openModal('signup-modal')">
+          Start for Free
+        </button>
+      </div>
+
+      <!-- ── BASIC ─────────────────────────────────────────────────────────── -->
+      <div class="pricing-card featured pc-basic">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-label">Active Researcher</div>
+        <h3>Basic</h3>
+        <div class="pricing-price">
+          <span class="price-num" id="basic-price">$25</span>
+          <span class="price-period" id="basic-period">/ month</span>
+        </div>
+        <p class="pricing-annual-note hidden" id="basic-annual-note">
+          Billed as <strong>$250/year</strong> — save $50 vs monthly
+        </p>
+        <p class="pricing-desc">
+          Automates the physical paperwork and organizes your standard research process.
+          Built for individual family historians researching a specific lineage.
+        </p>
+        <div class="pricing-divider"></div>
+
+        <div class="pricing-section-head">Everything in Free, plus:</div>
+        <ul class="pricing-features">
+          <li class="active-feature"><span class="check">✓</span> 50 core historical &amp; African American databases</li>
+          <li class="active-feature"><span class="check">✓</span> Automated research log (unlimited)</li>
+          <li class="active-feature"><span class="check">✓</span> Full pedigree &amp; DNA match tracking</li>
+          <li class="active-feature"><span class="check">✓</span> Sources &amp; citations database</li>
+          <li class="active-feature"><span class="check">✓</span> Research questions tracker (GPS standard)</li>
+          <li class="active-feature"><span class="check">✓</span> <strong>100 Archive Scanner scans / month</strong></li>
+          <li class="active-feature"><span class="check">✓</span> Create private digital exhibits</li>
+          <li class="active-feature"><span class="check">✓</span> 5 GB secure cloud storage</li>
+        </ul>
+
+        <button class="btn btn-primary pricing-cta" onclick="openSignupWithPlan('basic-paid')">
+          Get Basic Access
+        </button>
+        <p class="pricing-cta-note">No contracts · Cancel anytime</p>
+      </div>
+
+      <!-- ── UPGRADE ───────────────────────────────────────────────────────── -->
+      <div class="pricing-card pc-upgrade">
+        <div class="pricing-label">Power Researcher &amp; Archivist</div>
+        <h3>Upgrade</h3>
+        <div class="pricing-price">
+          <span class="price-num price-upgrade" id="upgrade-price">$49</span>
+          <span class="price-period" id="upgrade-period">/ month</span>
+        </div>
+        <p class="pricing-annual-note hidden" id="upgrade-annual-note">
+          Billed as <strong>$490/year</strong> — save $98 vs monthly
+        </p>
+        <p class="pricing-desc">
+          Deep AI analysis, unlimited bulk processing, and public exhibit publishing — for
+          professional genealogists and large family archive collections.
+        </p>
+        <div class="pricing-divider"></div>
+
+        <div class="pricing-section-head">Everything in Basic, plus:</div>
+        <ul class="pricing-features">
+          <li class="active-feature"><span class="check">✓</span> All 100+ databases including deep-web state &amp; local archives</li>
+          <li class="active-feature"><span class="check">✓</span> Advanced analytics — spelling variants, naming patterns, brick-wall strategies</li>
+          <li class="active-feature"><span class="check">✓</span> <strong>Unlimited Archive Scanner</strong> — bulk PDF &amp; ZIP uploads</li>
+          <li class="active-feature"><span class="check">✓</span> Publish public <em>and</em> private digital exhibits</li>
+          <li class="active-feature"><span class="check">✓</span> Multi-tree &amp; client project management</li>
+          <li class="active-feature"><span class="check">✓</span> 100 GB – 1 TB high-capacity cloud storage</li>
+        </ul>
+
+        <button class="btn btn-upgrade pricing-cta" onclick="openSignupWithPlan('upgrade')">
+          Get Upgrade Access
+        </button>
+        <p class="pricing-cta-note">No contracts · Cancel anytime</p>
+      </div>
+
+    </div><!-- /pricing-grid-3 -->
+
+    <!-- ── Comparison table ──────────────────────────────────────────────── -->
+    <div class="compare-table-wrap">
+      <div class="compare-table-header">
+        <div class="section-eyebrow">Full Comparison</div>
+      </div>
+      <div class="compare-table">
+        <table>
+          <thead>
+            <tr>
+              <th class="compare-feature-col">Feature</th>
+              <th><span class="ct-tier-name">Free</span><br><span class="ct-tier-price">$0</span></th>
+              <th class="ct-featured"><span class="ct-tier-name">Basic</span><br><span class="ct-tier-price">$25/mo</span></th>
+              <th><span class="ct-tier-name">Upgrade</span><br><span class="ct-tier-price">$49/mo</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="compare-group-row"><td colspan="4">Research Tools</td></tr>
+            <tr>
+              <td>Pedigree Chart &amp; DNA Tree</td>
+              <td><span class="ct-yes">Unlimited</span></td>
+              <td class="ct-featured"><span class="ct-yes">Unlimited</span></td>
+              <td><span class="ct-yes">Unlimited</span></td>
+            </tr>
+            <tr>
+              <td>Relationship Calculator</td>
+              <td><span class="ct-yes">✓</span></td>
+              <td class="ct-featured"><span class="ct-yes">✓</span></td>
+              <td><span class="ct-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Search Databases</td>
+              <td><span class="ct-limited">5–10 Public</span></td>
+              <td class="ct-featured"><span class="ct-partial">50+ Core</span></td>
+              <td><span class="ct-yes">100+ Complete</span></td>
+            </tr>
+            <tr>
+              <td>Automated Research Log</td>
+              <td><span class="ct-no">Manual Entry</span></td>
+              <td class="ct-featured"><span class="ct-yes">Fully Automated</span></td>
+              <td><span class="ct-yes">Analytics + Variants</span></td>
+            </tr>
+
+            <tr class="compare-group-row"><td colspan="4">Archive Scanner</td></tr>
+            <tr>
+              <td>AI Metadata Scans</td>
+              <td><span class="ct-limited">3–5 Total (lifetime)</span></td>
+              <td class="ct-featured"><span class="ct-partial">100 / month</span></td>
+              <td><span class="ct-yes">Unlimited</span></td>
+            </tr>
+            <tr>
+              <td>Bulk PDF / ZIP Upload</td>
+              <td><span class="ct-no">—</span></td>
+              <td class="ct-featured"><span class="ct-no">—</span></td>
+              <td><span class="ct-yes">✓</span></td>
+            </tr>
+
+            <tr class="compare-group-row"><td colspan="4">Exhibits &amp; Collections</td></tr>
+            <tr>
+              <td>Digital Exhibits</td>
+              <td><span class="ct-limited">View Only</span></td>
+              <td class="ct-featured"><span class="ct-partial">Create Private</span></td>
+              <td><span class="ct-yes">Public &amp; Private</span></td>
+            </tr>
+
+            <tr class="compare-group-row"><td colspan="4">Storage</td></tr>
+            <tr>
+              <td>Cloud Storage</td>
+              <td><span class="ct-limited">250–500 MB</span></td>
+              <td class="ct-featured"><span class="ct-partial">5 GB</span></td>
+              <td><span class="ct-yes">100 GB – 1 TB</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /compare-table-wrap -->
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     FOOTER
+═════════════════════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo-row">
+          <svg class="logo-tree-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M14 31 Q12 28 11.5 25 Q11 22 12.5 20 L15 19.5 L15.5 31Z" fill="currentColor" opacity=".85"/>
+            <path d="M18 31 Q20 28 20.5 25 Q21 22 19.5 20 L17 19.5 L16.5 31Z" fill="currentColor" opacity=".85"/>
+            <path d="M15 31 L17 31 L16.8 20 Q16.2 19 16 18.9 Q15.8 19 15.2 20Z" fill="currentColor"/>
+            <path d="M15.2 22 Q11 21 7 21.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M16.8 22 Q21 21 25 21.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M15 20 Q12 18 9 17"  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M17 20 Q20 18 23 17" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="16" cy="12" r="8"   fill="currentColor"/>
+            <circle cx="9"  cy="15" r="5.5" fill="currentColor"/>
+            <circle cx="23" cy="15" r="5.5" fill="currentColor"/>
+            <circle cx="16" cy="7"  r="5.5" fill="currentColor"/>
+            <circle cx="11" cy="10" r="4.5" fill="currentColor"/>
+            <circle cx="21" cy="10" r="4.5" fill="currentColor"/>
+            <circle cx="6"  cy="19" r="4"   fill="currentColor"/>
+            <circle cx="26" cy="19" r="4"   fill="currentColor"/>
+          </svg>
+          <span class="logo-name">Krio Griot</span>
+        </div>
+        <p>Legacy research and genealogy collection management built for African American family history.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="#about">About</a>
+        <a href="#brick-wall">The 1870 Wall</a>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/app">Launch App</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="#" onclick="showComingSoon('Help Center')">Help Center</a>
+        <a href="#" onclick="showComingSoon('Documentation')">Documentation</a>
+        <a href="#" onclick="openBugReport()">Report a Bug</a>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <a href="#" onclick="openModal('login-modal')">Log In</a>
+        <a href="#" onclick="openModal('signup-modal')">Create Account</a>
+        <a href="#pricing">Upgrade Plan</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KrioGriot &nbsp;·&nbsp; A Legacy Designs Studio Project</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     LOGIN MODAL
+═════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="login-modal" onclick="handleOverlayClick(event,'login-modal')">
+  <div class="auth-modal" onclick="event.stopPropagation()">
+    <div class="auth-modal-header">
+      <div>
+        <h2>Welcome Back</h2>
+        <p>Log in to continue your research</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('login-modal')">✕</button>
+    </div>
+    <div class="auth-modal-body">
+      <div class="auth-alert" id="login-alert"></div>
+
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" />
+      </div>
+
+      <button class="btn btn-primary auth-submit-btn" onclick="handleLogin()">
+        Log In to Krio Griot
+      </button>
+
+      <div class="auth-switch">
+        Don't have an account?
+        <button onclick="switchModal('login-modal','signup-modal')">Create one for free</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SIGNUP MODAL
+═════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="signup-modal" onclick="handleOverlayClick(event,'signup-modal')">
+  <div class="auth-modal" onclick="event.stopPropagation()">
+    <div class="auth-modal-header">
+      <div>
+        <h2>Create Your Account</h2>
+        <p>Start uncovering your family history today</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('signup-modal')">✕</button>
+    </div>
+    <div class="auth-modal-body">
+      <div class="auth-alert" id="signup-alert"></div>
+
+      <!-- Contact Info -->
+      <div class="form-section-label">Contact Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="signup-first" placeholder="First" autocomplete="given-name" />
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="signup-last" placeholder="Last" autocomplete="family-name" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label>Phone Number <span style="color:var(--muted2);font-weight:400;">(optional)</span></label>
+        <input type="tel" id="signup-phone" placeholder="+1 (555) 000-0000" autocomplete="tel" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="signup-pass" placeholder="Create a password" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input type="password" id="signup-pass2" placeholder="Confirm password" autocomplete="new-password" />
+        </div>
+      </div>
+
+      <!-- Plan Selection -->
+      <div class="form-section-label">Choose Your Plan</div>
+      <div class="plan-selector plan-selector-3">
+        <div class="plan-option selected" id="plan-free" onclick="selectPlan('free')">
+          <span class="plan-option-check">✓</span>
+          <div class="plan-option-name">Free</div>
+          <div class="plan-option-price">$0 · Forever</div>
+        </div>
+        <div class="plan-option" id="plan-basic-paid" onclick="selectPlan('basic-paid')">
+          <span class="plan-option-check">✓</span>
+          <div class="plan-option-name">Basic</div>
+          <div class="plan-option-price">$25 / month</div>
+        </div>
+        <div class="plan-option plan-option-upgrade" id="plan-upgrade" onclick="selectPlan('upgrade')">
+          <span class="plan-option-check">✓</span>
+          <div class="plan-option-name">Upgrade</div>
+          <div class="plan-option-price">$49 / month</div>
+        </div>
+      </div>
+      <div class="plan-detail-box" id="plan-detail-box">
+        <span id="plan-detail-text">Get started free — explore the platform with no commitment.</span>
+      </div>
+
+      <!-- Billing (shown for paid plan) -->
+      <div class="billing-section" id="billing-section">
+        <div class="form-section-label">Billing Information</div>
+        <div class="form-group">
+          <label>Cardholder Name</label>
+          <input type="text" id="billing-name" placeholder="Name on card" autocomplete="cc-name" />
+        </div>
+        <div class="form-group">
+          <label>Card Number</label>
+          <div class="card-input-wrapper">
+            <input type="text" id="billing-card" placeholder="1234 5678 9012 3456"
+              maxlength="19" oninput="formatCardNumber(this)" autocomplete="cc-number" />
+            <span class="card-icon">card</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Expiration</label>
+            <input type="text" id="billing-exp" placeholder="MM / YY" maxlength="7"
+              oninput="formatExpiry(this)" autocomplete="cc-exp" />
+          </div>
+          <div class="form-group">
+            <label>CVC</label>
+            <input type="text" id="billing-cvc" placeholder="123" maxlength="4"
+              oninput="this.value=this.value.replace(/\D/g,'')" autocomplete="cc-csc" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Billing Address</label>
+          <input type="text" id="billing-addr" placeholder="Street address" autocomplete="street-address" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>City</label>
+            <input type="text" id="billing-city" placeholder="City" autocomplete="address-level2" />
+          </div>
+          <div class="form-group">
+            <label>ZIP / Postal Code</label>
+            <input type="text" id="billing-zip" placeholder="ZIP" autocomplete="postal-code" />
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary auth-submit-btn" onclick="handleSignup()">
+        Create Account
+      </button>
+
+      <div class="auth-switch">
+        Already have an account?
+        <button onclick="switchModal('signup-modal','login-modal')">Log in here</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     BUG REPORT MODAL
+═════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="bug-modal" onclick="handleOverlayClick(event,'bug-modal')">
+  <div class="auth-modal" onclick="event.stopPropagation()">
+    <div class="auth-modal-header">
+      <div>
+        <h2>Report a Bug</h2>
+        <p>Help us improve Krio Griot</p>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('bug-modal')">✕</button>
+    </div>
+    <div class="auth-modal-body">
+      <div class="form-group">
+        <label>What were you trying to do?</label>
+        <input type="text" id="bug-action" placeholder="e.g. Add a new ancestor, run a search…" />
+      </div>
+      <div class="form-group">
+        <label>What happened instead?</label>
+        <textarea id="bug-desc" rows="4"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;color:var(--text);font-size:.9rem;font-family:var(--font);width:100%;resize:vertical;outline:none;"
+          placeholder="Describe the bug in as much detail as possible…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Your Email <span style="color:var(--muted2);font-weight:400;">(for follow-up)</span></label>
+        <input type="email" id="bug-email" placeholder="you@example.com" />
+      </div>
+      <button class="btn btn-primary auth-submit-btn" onclick="handleBugReport()">
+        Submit Report
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toast-icon">✓</span>
+  <span id="toast-msg">Done</span>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     LANDING PAGE JAVASCRIPT
+═════════════════════════════════════════════════════════════════════════ -->
+<script>
+// ── Modal helpers ────────────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+  document.body.style.overflow = '';
+}
+function handleOverlayClick(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+function switchModal(from, to) {
+  closeModal(from);
+  openModal(to);
+}
+function openSignupWithPlan(plan) {
+  openModal('signup-modal');
+  setTimeout(() => selectPlan(plan), 50);
+}
+function openBugReport() {
+  openModal('bug-modal');
+}
+function showComingSoon(label) {
+  showToast('→', `${label} coming soon!`);
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(icon, msg, duration = 3500) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent  = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ── Annual / monthly billing toggle ─────────────────────────────────────
+let billingAnnual = false;
+function toggleBilling(cb) {
+  billingAnnual = cb.checked;
+  const badge = document.getElementById('annual-badge');
+  const mLabel = document.getElementById('toggle-monthly-label');
+  const aLabel = document.getElementById('toggle-annual-label');
+  if (billingAnnual) {
+    badge.classList.remove('hidden');
+    mLabel.style.color = 'var(--muted)'; aLabel.style.color = 'var(--text)';
+    document.getElementById('basic-price').textContent   = '$250';
+    document.getElementById('basic-period').textContent  = '/ year';
+    document.getElementById('upgrade-price').textContent = '$490';
+    document.getElementById('upgrade-period').textContent= '/ year';
+    document.getElementById('basic-annual-note').classList.add('hidden');
+    document.getElementById('upgrade-annual-note').classList.add('hidden');
+  } else {
+    badge.classList.add('hidden');
+    mLabel.style.color = 'var(--text)'; aLabel.style.color = 'var(--muted)';
+    document.getElementById('basic-price').textContent   = '$25';
+    document.getElementById('basic-period').textContent  = '/ month';
+    document.getElementById('upgrade-price').textContent = '$49';
+    document.getElementById('upgrade-period').textContent= '/ month';
+  }
+  // Update plan selector prices too
+  const basicPriceEl = document.querySelector('#plan-basic-paid .plan-option-price');
+  if (basicPriceEl) basicPriceEl.textContent = billingAnnual ? '$250 / year' : '$25 / month';
+  const upgradePriceEl = document.querySelector('#plan-upgrade .plan-option-price');
+  if (upgradePriceEl) upgradePriceEl.textContent = billingAnnual ? '$490 / year' : '$49 / month';
+}
+
+// ── Plan selection ────────────────────────────────────────────────────────
+const PLAN_DETAILS = {
+  free:       'Get started free — explore the platform with no commitment.',
+  'basic-paid':  'Automates your research workflow with 50 databases, full logging, and 100 AI scans/month.',
+  upgrade:    'Full access to all 100+ databases, unlimited AI scanning, bulk processing, and public exhibits.',
+};
+let selectedPlan = 'free';
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan-option').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById(`plan-${plan}`);
+  if (el) el.classList.add('selected');
+  // Detail box
+  const detail = document.getElementById('plan-detail-text');
+  if (detail) detail.textContent = PLAN_DETAILS[plan] || '';
+  // Billing
+  const billing = document.getElementById('billing-section');
+  const btn = document.querySelector('#signup-modal .auth-submit-btn');
+  if (plan === 'free') {
+    billing.classList.remove('visible');
+    if (btn) btn.textContent = 'Create Free Account';
+  } else {
+    billing.classList.add('visible');
+    const label = plan === 'upgrade' ? 'Create Account — $49/month' : 'Create Account — $25/month';
+    if (btn) btn.textContent = label;
+  }
+}
+
+// ── Card number formatter ─────────────────────────────────────────────────
+function formatCardNumber(input) {
+  let v = input.value.replace(/\D/g, '').substring(0, 16);
+  input.value = v.replace(/(.{4})/g, '$1 ').trim();
+}
+function formatExpiry(input) {
+  let v = input.value.replace(/\D/g, '').substring(0, 4);
+  if (v.length >= 3) v = v.substring(0,2) + ' / ' + v.substring(2);
+  input.value = v;
+}
+
+// ── User store (localStorage) ─────────────────────────────────────────────
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('lr_user') || 'null'); } catch { return null; }
+}
+function saveUser(u) {
+  localStorage.setItem('lr_user', JSON.stringify(u));
+}
+function updateNavForUser(u) {
+  if (!u) return;
+  const ctas = document.querySelector('.nav-ctas');
+  if (ctas) {
+    ctas.innerHTML = `
+      <span style="font-size:.85rem;color:var(--muted);">Hi, ${escHtml(u.firstName)} &#x1F44B;&#x1F3FE;</span>
+      <a href="/app" class="btn btn-primary btn-sm">Open App</a>
+    `;
+  }
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────
+function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const alert = document.getElementById('login-alert');
+  alert.className = 'auth-alert'; alert.textContent = '';
+
+  if (!email || !pass) {
+    alert.className = 'auth-alert error'; alert.textContent = 'Please enter your email and password.'; return;
+  }
+
+  const stored = getUser();
+  if (!stored || stored.email.toLowerCase() !== email.toLowerCase()) {
+    alert.className = 'auth-alert error'; alert.textContent = 'No account found with that email address.'; return;
+  }
+  if (stored.password !== btoa(pass)) {
+    alert.className = 'auth-alert error'; alert.textContent = 'Incorrect password. Please try again.'; return;
+  }
+
+  alert.className = 'auth-alert success'; alert.textContent = '✓ Logged in! Redirecting to app…';
+  updateNavForUser(stored);
+  setTimeout(() => { closeModal('login-modal'); window.location.href = '/app'; }, 1200);
+}
+
+// ── Signup ────────────────────────────────────────────────────────────────
+function handleSignup() {
+  const first = document.getElementById('signup-first').value.trim();
+  const last  = document.getElementById('signup-last').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const phone = document.getElementById('signup-phone').value.trim();
+  const pass  = document.getElementById('signup-pass').value;
+  const pass2 = document.getElementById('signup-pass2').value;
+  const alert = document.getElementById('signup-alert');
+  alert.className = 'auth-alert'; alert.textContent = '';
+
+  if (!first || !last) {
+    alert.className = 'auth-alert error'; alert.textContent = 'Please enter your first and last name.'; return;
+  }
+  if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+    alert.className = 'auth-alert error'; alert.textContent = 'Please enter a valid email address.'; return;
+  }
+  if (pass.length < 8) {
+    alert.className = 'auth-alert error'; alert.textContent = 'Password must be at least 8 characters.'; return;
+  }
+  if (pass !== pass2) {
+    alert.className = 'auth-alert error'; alert.textContent = 'Passwords do not match.'; return;
+  }
+
+  // Validate billing for paid plans
+  if (selectedPlan !== 'free') {
+    const card = document.getElementById('billing-card').value.replace(/\s/g,'');
+    const exp  = document.getElementById('billing-exp').value;
+    const cvc  = document.getElementById('billing-cvc').value;
+    if (!card || card.length < 15 || !exp || !cvc) {
+      alert.className = 'auth-alert error'; alert.textContent = 'Please complete your billing information.'; return;
+    }
+  }
+
+  const isPaid = selectedPlan !== 'free';
+  const user = {
+    firstName: first,
+    lastName:  last,
+    email:     email,
+    phone:     phone,
+    plan:      selectedPlan,
+    billingCycle: billingAnnual ? 'annual' : 'monthly',
+    password:  btoa(pass),   // NOTE: in production use server-side hashing
+    scansUsed: 0,            // free tier scan counter
+    storageUsedMB: 0,
+    billingAddress: isPaid ? {
+      name: document.getElementById('billing-name').value,
+      addr: document.getElementById('billing-addr').value,
+      city: document.getElementById('billing-city').value,
+      zip:  document.getElementById('billing-zip').value,
+    } : null,
+    createdAt: new Date().toISOString(),
+  };
+  saveUser(user);
+  updateNavForUser(user);
+  alert.className = 'auth-alert success';
+  const planLabel = selectedPlan === 'free' ? 'Free account' : selectedPlan === 'basic-paid' ? 'Basic plan' : 'Upgrade plan';
+  alert.textContent = `✓ ${planLabel} created! Taking you to your research workspace…`;
+  setTimeout(() => { closeModal('signup-modal'); window.location.href = '/app'; }, 1400);
+}
+
+// ── Bug report ────────────────────────────────────────────────────────────
+function handleBugReport() {
+  const action = document.getElementById('bug-action').value.trim();
+  const desc   = document.getElementById('bug-desc').value.trim();
+  if (!action || !desc) {
+    showToast('!', 'Please describe the issue before submitting.'); return;
+  }
+  closeModal('bug-modal');
+  showToast('✓', 'Bug report submitted — thank you!');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore session if user is already logged in
+  const user = getUser();
+  if (user) updateNavForUser(user);
+
+  // Sticky nav shadow
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('site-nav');
+    if (window.scrollY > 20) {
+      nav.style.background = 'rgba(12,11,9,0.96)';
+      nav.style.boxShadow  = '0 4px 30px rgba(0,0,0,.4)';
+    } else {
+      nav.style.background = 'rgba(12,11,9,0.82)';
+      nav.style.boxShadow  = 'none';
+    }
+  });
+
+  // Keyboard escape closes modals
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      ['login-modal','signup-modal','bug-modal'].forEach(id => {
+        if (!document.getElementById(id).classList.contains('hidden')) closeModal(id);
+      });
+    }
+  });
+});
+</script>
+
+</body>
+</html>
