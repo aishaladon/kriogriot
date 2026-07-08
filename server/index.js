@@ -7,7 +7,7 @@ const path     = require('path');
 const fs       = require('fs');
 const crypto   = require('crypto');
 
-const airtable  = require('./airtable');
+const airtable  = require('./db');          // data-layer switch (airtable | mysql via DB_DRIVER)
 const anthropic = require('./anthropic');
 
 // ── GEDCOM relationship data (loaded once, cached) ────────────────────────────
