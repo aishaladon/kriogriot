@@ -9,6 +9,7 @@ const crypto   = require('crypto');
 
 const airtable  = require('./db');          // data-layer switch (airtable | mysql via DB_DRIVER)
 const anthropic = require('./anthropic');
+const { buildGedcomIndex, computeRelationships } = require('./relationships');
 
 // ── GEDCOM relationship data (loaded once, cached) ────────────────────────────
 const GEDCOM_MAP_FILE      = path.join(__dirname, 'gedcom-map.json');
@@ -33,22 +34,7 @@ function loadGedcomCache() {
     const map  = JSON.parse(fs.readFileSync(GEDCOM_MAP_FILE,  'utf8'));
     const data = JSON.parse(fs.readFileSync(GEDCOM_DATA_FILE, 'utf8'));
 
-    // Build reverse map: airtableId → gedcom individual data
-    const reverseMap = {};           // airtableId  → gedcomId
-    const indiByGedcomId = {};       // gedcomId    → { famcId, famsIds }
-    for (const [gedcomId, airtableId] of Object.entries(map)) {
-      reverseMap[airtableId] = gedcomId;
-    }
-    for (const indi of (data.individuals || [])) {
-      indiByGedcomId[indi.id] = { famcId: indi.famcId, famsIds: indi.famsIds };
-    }
-
-    _gedcomCache = {
-      reverseMap,
-      indiByGedcomId,
-      families: data.families || [],
-      rootId:   data.rootId   || null,
-    };
+    _gedcomCache = buildGedcomIndex(map, data);
     console.log(`✅  GEDCOM data loaded: ${data.individuals?.length} people, ${data.families?.length} families`);
     return _gedcomCache;
   } catch (err) {
@@ -139,13 +125,31 @@ app.get('/api/ancestors', async (req, res) => {
 
 app.get('/api/ancestor/:id', async (req, res) => {
   try {
-    const profile = await airtable.getAncestorProfile(req.params.id);
-    res.json(profile);
+    const profile      = await airtable.getAncestorProfile(req.params.id);
+    const relationships = await getRelationshipsFor(req.params.id);
+    res.json({ ...profile, relationships });
   } catch (err) {
     console.error('Ancestor profile error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
+
+// ── Relationships (parents / spouses / children) for a person ────────────────
+// Combines manual family-tree overrides with GEDCOM data. Names/dates for
+// working-DB people come from getFamilyTreeData(); GEDCOM fills in the rest.
+async function getRelationshipsFor(recordId) {
+  try {
+    const gedcom    = loadGedcomCache();
+    const overrides = loadOverrides();
+    const people    = await airtable.getFamilyTreeData();  // [{ id, name, birthDate, deathDate, sex, photoUrl }]
+    const peopleById = {};
+    for (const p of (people || [])) peopleById[p.id] = p;
+    return computeRelationships(recordId, peopleById, gedcom, overrides);
+  } catch (err) {
+    console.warn('Relationships compute failed:', err.message);
+    return { parents: [], spouses: [], children: [] };
+  }
+}
 
 // ── Delete a person record ─────────────────────────────────────────────────────
 app.delete('/api/ancestor/:id', async (req, res) => {

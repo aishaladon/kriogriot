@@ -934,7 +934,7 @@ async function openProfile(ancestorId) {
   try {
     const {
       ancestor, questions, sources, evidence,
-      dnaTests, dnaMatches, archives, collections, researchLog,
+      dnaTests, dnaMatches, archives, collections, researchLog, relationships,
     } = await api(`/api/ancestor/${ancestorId}`);
 
     // Cache the ancestor so launchResearchForAncestor can read it safely
@@ -985,6 +985,8 @@ async function openProfile(ancestorId) {
     const notesHtml = ancestor['Notes']
       ? `<div class="profile-notes"><strong>Notes:</strong> ${escHtml(ancestor['Notes'])}</div>` : '';
 
+    const relationshipsHtml = renderRelationshipsPanel(relationships);
+
     content.innerHTML = `
       <div class="profile-header">
         ${avatarHtml}
@@ -1004,6 +1006,7 @@ async function openProfile(ancestorId) {
 
       ${bioHtml}
       ${notesHtml}
+      ${relationshipsHtml}
 
       <div class="profile-tabs">
         <button class="tab-btn active" onclick="switchTab('tab-questions', this)">Questions (${(questions||[]).length})</button>
@@ -1035,6 +1038,58 @@ function switchTab(tabId, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(tabId)?.classList.add('active');
   btn.classList.add('active');
+}
+
+// ── Relationships panel (parents / spouses / children, ancestry.com style) ────
+function renderRelationshipsPanel(relationships) {
+  const rel = relationships || {};
+  const parents  = rel.parents  || [];
+  const spouses  = rel.spouses  || [];
+  const children = rel.children || [];
+
+  // Nothing to show — hide the panel entirely rather than render empty groups.
+  if (!parents.length && !spouses.length && !children.length) return '';
+
+  const initials = (name) => (name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+
+  const personCard = (p) => {
+    const years = [p.birthYear, p.deathYear].filter(Boolean).join(' – ');
+    const sub   = [p.relation, years].filter(Boolean).join(' · ');
+    const avatar = p.photoUrl
+      ? `<img src="${escHtml(p.photoUrl)}" alt="" class="rel-avatar-img" />`
+      : `<div class="rel-avatar-fallback">${escHtml(initials(p.name))}</div>`;
+    const clickable = p.inDb && p.id;
+    const attrs = clickable
+      ? `class="rel-card rel-card-link" onclick="openProfile('${p.id}')" title="Open profile"`
+      : `class="rel-card" title="Not in your working database"`;
+    return `
+      <div ${attrs}>
+        ${avatar}
+        <div class="rel-card-text">
+          <div class="rel-card-name">${escHtml(p.name)}</div>
+          ${sub ? `<div class="rel-card-sub">${escHtml(sub)}</div>` : ''}
+        </div>
+      </div>`;
+  };
+
+  const group = (label, list) => {
+    if (!list.length) return '';
+    return `
+      <div class="rel-group">
+        <div class="rel-group-label">${escHtml(label)} <span class="rel-group-count">${list.length}</span></div>
+        <div class="rel-group-cards">${list.map(personCard).join('')}</div>
+      </div>`;
+  };
+
+  return `
+    <div class="profile-relationships">
+      <div class="profile-rel-header">Relationships</div>
+      <div class="profile-rel-body">
+        ${group('Parents',  parents)}
+        ${group('Spouses',  spouses)}
+        ${group('Children', children)}
+      </div>
+    </div>`;
 }
 
 function renderQuestionsTab(questions) {

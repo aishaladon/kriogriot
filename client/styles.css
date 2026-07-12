@@ -433,6 +433,85 @@ body {
 }
 .profile-notes strong { color: var(--text); }
 
+/* ── Profile relationships panel (parents / spouses / children) ────────────── */
+.profile-relationships {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.profile-rel-header {
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--muted);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.profile-rel-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 16px;
+}
+.rel-group { flex: 1 1 220px; min-width: 200px; }
+.rel-group-label {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.rel-group-count {
+  display: inline-block;
+  background: var(--surface2);
+  color: var(--muted);
+  border-radius: 20px;
+  padding: 0 7px;
+  font-size: .68rem;
+  margin-left: 2px;
+}
+.rel-group-cards { display: flex; flex-direction: column; gap: 8px; }
+.rel-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.rel-card-link { cursor: pointer; transition: border-color .15s, background .15s; }
+.rel-card-link:hover { border-color: var(--accent); background: var(--surface); }
+.rel-avatar-img,
+.rel-avatar-fallback {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+}
+.rel-avatar-fallback {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.rel-card-text { min-width: 0; }
+.rel-card-name {
+  font-size: .84rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rel-card-sub { font-size: .74rem; color: var(--muted); margin-top: 1px; }
+
 /* ── Profile badges (GPS / status chips) ──────────────────────────────────── */
 .profile-badge {
   display: inline-block;

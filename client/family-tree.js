@@ -181,23 +181,18 @@
     const tree = buildAncestor(rootPerson, 0);
 
     // ── Unlinked people (no GEDCOM data / not reachable from root) ───────────
+    // Build these through buildAncestor too, so any manual parent overrides
+    // the user has set are honored (most curated people are NOT in the GEDCOM
+    // map, so overrides are the only way to link them).
     const unlinked = people
       .filter(p => {
         const uid = p.id || p.gedcomId;
-        return !visited.has(uid);
+        if (visited.has(uid)) return false;
+        // Truly-orphaned people, plus anyone the user has manually connected.
+        return !p.famcId || overrides[p.id];
       })
-      // Only show people with no famcId (truly orphaned) in the virtual node;
-      // skip people who ARE in the GEDCOM but were simply collapsed out
-      .filter(p => !p.famcId)
-      .map(p => ({
-        ...p,
-        _birthYear  : extractYear(p.birthDate),
-        _deathYear  : extractYear(p.deathDate),
-        _displayName: trunc(p.name || 'Unknown', 22),
-        _uid        : ++_uid,
-        children    : null,
-        _children   : null,
-      }));
+      .map(p => buildAncestor(p, 0))   // honors overrides + marks visited
+      .filter(Boolean);
 
     if (unlinked.length > 0) {
       const virtualNode = {
@@ -227,8 +222,9 @@
      Used when no GEDCOM data has been imported yet.
   ══════════════════════════════════════════════════════════════════ */
 
-  function buildTree(people) {
+  function buildTree(people, overrides) {
     if (!people || !people.length) return null;
+    overrides = overrides || {};
 
     /* Normalise generation numbers — track whether the value was explicit */
     const nodes = people.map(p => {
@@ -249,7 +245,9 @@
     let root = nodes.find(n => n._gen === 0 && n._genExplicit)
             || nodes.find(n => n._gen === 0)
             || nodes[0];
-    const used = new Set([root.id]);
+    const used  = new Set([root.id]);
+    const byId  = {};
+    nodes.forEach(n => { byId[n.id] = n; });
 
     function getParents(person) {
       const nextGen  = person._gen + 1;
@@ -278,8 +276,19 @@
       return parents;
     }
 
+    // Manual overrides take priority over generation-based inference.
+    function getOverrideParents(person) {
+      const ov = overrides[person.id];
+      if (!ov || (!ov.fatherId && !ov.motherId)) return null;
+      const parents = [];
+      for (const pid of [ov.fatherId, ov.motherId]) {
+        if (pid && byId[pid] && !used.has(pid)) { used.add(pid); parents.push(byId[pid]); }
+      }
+      return parents;
+    }
+
     function buildNode(person) {
-      const parents = getParents(person);
+      const parents = getOverrideParents(person) || getParents(person);
       const node = {
         ...person,
         _birthYear  : extractYear(person.birthDate),
@@ -822,7 +831,7 @@
   function rebuildTree() {
     _rootData = _gedcomLoaded
       ? buildTreeFromGedcom(_people, _families, _gedcomRootId, _overrides)
-      : buildTree(_people);
+      : buildTree(_people, _overrides);
     render();
   }
 
@@ -981,7 +990,7 @@
 
       const rootData = gedcomLoaded
         ? buildTreeFromGedcom(people, families, gedcomRootId, _overrides)
-        : buildTree(people);
+        : buildTree(people, _overrides);
 
       if (!rootData) {
         container.innerHTML = `
