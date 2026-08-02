@@ -9,24 +9,21 @@ async function setup() {
     user:     process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
-    multipleStatements: true,
   });
 
   console.log('Connected. Creating tables...');
 
-  await conn.query('SET FOREIGN_KEY_CHECKS=0');
-
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS users (
+  const tables = [
+    `CREATE TABLE IF NOT EXISTS users (
       id            INT AUTO_INCREMENT PRIMARY KEY,
       email         VARCHAR(255) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
       name          VARCHAR(255),
       plan          VARCHAR(50)  DEFAULT 'basic',
       created_at    DATETIME     DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS people (
+    `CREATE TABLE IF NOT EXISTS people (
       id            INT AUTO_INCREMENT PRIMARY KEY,
       user_id       INT NOT NULL,
       full_name     VARCHAR(255),
@@ -49,20 +46,20 @@ async function setup() {
       notes         TEXT,
       created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS family_connections (
+    `CREATE TABLE IF NOT EXISTS family_connections (
       id         INT AUTO_INCREMENT PRIMARY KEY,
       user_id    INT NOT NULL,
       child_id   INT NOT NULL,
       father_id  INT,
       mother_id  INT,
       UNIQUE KEY uq_child (user_id, child_id),
-      FOREIGN KEY (user_id)   REFERENCES users(id)  ON DELETE CASCADE,
-      FOREIGN KEY (child_id)  REFERENCES people(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
+      FOREIGN KEY (child_id) REFERENCES people(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS research_questions (
+    `CREATE TABLE IF NOT EXISTS research_questions (
       id              INT AUTO_INCREMENT PRIMARY KEY,
       user_id         INT NOT NULL,
       question        TEXT,
@@ -76,9 +73,9 @@ async function setup() {
       notes           TEXT,
       created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS sources (
+    `CREATE TABLE IF NOT EXISTS sources (
       id              INT AUTO_INCREMENT PRIMARY KEY,
       user_id         INT NOT NULL,
       name            VARCHAR(500),
@@ -93,9 +90,9 @@ async function setup() {
       source_file_url VARCHAR(500),
       created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS research_log (
+    `CREATE TABLE IF NOT EXISTS research_log (
       id          INT AUTO_INCREMENT PRIMARY KEY,
       user_id     INT NOT NULL,
       title       VARCHAR(500),
@@ -104,9 +101,9 @@ async function setup() {
       notes       TEXT,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS dna_testing (
+    `CREATE TABLE IF NOT EXISTS dna_testing (
       id          INT AUTO_INCREMENT PRIMARY KEY,
       user_id     INT NOT NULL,
       name        VARCHAR(255),
@@ -116,9 +113,9 @@ async function setup() {
       notes       TEXT,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS dna_matches (
+    `CREATE TABLE IF NOT EXISTS dna_matches (
       id              INT AUTO_INCREMENT PRIMARY KEY,
       user_id         INT NOT NULL,
       match_name      VARCHAR(255),
@@ -128,9 +125,9 @@ async function setup() {
       notes           TEXT,
       created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS archives (
+    `CREATE TABLE IF NOT EXISTS archives (
       id          INT AUTO_INCREMENT PRIMARY KEY,
       user_id     INT NOT NULL,
       name        VARCHAR(500),
@@ -139,19 +136,29 @@ async function setup() {
       metadata    JSON,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
-    CREATE TABLE IF NOT EXISTS collections (
+    `CREATE TABLE IF NOT EXISTS collections (
       id          INT AUTO_INCREMENT PRIMARY KEY,
       user_id     INT NOT NULL,
       name        VARCHAR(500),
       description TEXT,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  ];
 
-  await conn.query('SET FOREIGN_KEY_CHECKS=1');
+  for (const sql of tables) {
+    const tableName = (sql.match(/CREATE TABLE IF NOT EXISTS (\w+)/) || [])[1];
+    try {
+      await conn.query(sql);
+      console.log(`  ✓ ${tableName}`);
+    } catch (err) {
+      console.error(`  ✗ ${tableName}: ${err.message}`);
+      throw err;
+    }
+  }
+
   console.log('✅  All tables created successfully.');
   await conn.end();
 }
