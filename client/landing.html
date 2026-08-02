@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -1346,8 +1345,9 @@ function handleBugReport() {
 // ── Init ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   // Restore session if user is already logged in
+  const token = localStorage.getItem('kg_token');
   const user = getUser();
-  if (user) updateNavForUser(user);
+  if (token && user) updateNavForUser(user);
 
   // Sticky nav shadow
   window.addEventListener('scroll', () => {
