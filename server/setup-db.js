@@ -14,6 +14,8 @@ async function setup() {
 
   console.log('Connected. Creating tables...');
 
+  await conn.query('SET FOREIGN_KEY_CHECKS=0');
+
   await conn.query(`
     CREATE TABLE IF NOT EXISTS users (
       id            INT AUTO_INCREMENT PRIMARY KEY,
@@ -149,6 +151,7 @@ async function setup() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  await conn.query('SET FOREIGN_KEY_CHECKS=1');
   console.log('✅  All tables created successfully.');
   await conn.end();
 }
