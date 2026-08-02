@@ -24,55 +24,54 @@ async function setup() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS people (
-      id            INT AUTO_INCREMENT PRIMARY KEY,
-      user_id       INT NOT NULL,
-      full_name     VARCHAR(255),
-      birth_name    VARCHAR(255),
-      also_known_as VARCHAR(255),
-      sex           VARCHAR(50),
-      race_ethnicity VARCHAR(255),
-      birth_date    VARCHAR(100),
-      birth_place   VARCHAR(255),
-      death_date    VARCHAR(100),
-      death_place   VARCHAR(255),
-      burial_place  VARCHAR(255),
-      generation_number VARCHAR(50),
-      relation_to_self VARCHAR(255),
-      line          VARCHAR(50),
+      id                   INT AUTO_INCREMENT PRIMARY KEY,
+      user_id              INT NOT NULL,
+      full_name            VARCHAR(255),
+      birth_name           VARCHAR(255),
+      also_known_as        VARCHAR(255),
+      sex                  VARCHAR(50),
+      race_ethnicity       VARCHAR(255),
+      birth_date           VARCHAR(100),
+      birth_place          VARCHAR(255),
+      death_date           VARCHAR(100),
+      death_place          VARCHAR(255),
+      burial_place         VARCHAR(255),
+      generation_number    VARCHAR(50),
+      relation_to_self     VARCHAR(255),
+      line                 VARCHAR(50),
       ancestry_profile_url VARCHAR(500),
       family_search_id     VARCHAR(100),
       geni_profile_url     VARCHAR(500),
-      photo_url     VARCHAR(500),
-      notes         TEXT,
-      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      photo_url            VARCHAR(500),
+      notes                TEXT,
+      created_at           DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS family_connections (
-      id         INT AUTO_INCREMENT PRIMARY KEY,
-      user_id    INT NOT NULL,
-      child_id   INT NOT NULL,
-      father_id  INT,
-      mother_id  INT,
+      id        INT AUTO_INCREMENT PRIMARY KEY,
+      user_id   INT NOT NULL,
+      child_id  INT NOT NULL,
+      father_id INT,
+      mother_id INT,
       UNIQUE KEY uq_child (user_id, child_id),
-      FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
-      FOREIGN KEY (child_id) REFERENCES people(id) ON DELETE CASCADE
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS research_questions (
-      id              INT AUTO_INCREMENT PRIMARY KEY,
-      user_id         INT NOT NULL,
-      question        TEXT,
-      research_type   VARCHAR(100),
-      status          VARCHAR(100),
-      priority        VARCHAR(50),
-      date_opened     VARCHAR(100),
-      date_resolved   VARCHAR(100),
-      conclusion      TEXT,
-      next_action     TEXT,
-      notes           TEXT,
-      created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      id            INT AUTO_INCREMENT PRIMARY KEY,
+      user_id       INT NOT NULL,
+      question      TEXT,
+      research_type VARCHAR(100),
+      status        VARCHAR(100),
+      priority      VARCHAR(50),
+      date_opened   VARCHAR(100),
+      date_resolved VARCHAR(100),
+      conclusion    TEXT,
+      next_action   TEXT,
+      notes         TEXT,
+      created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS sources (
@@ -89,42 +88,42 @@ async function setup() {
       notes           TEXT,
       source_file_url VARCHAR(500),
       created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS research_log (
-      id          INT AUTO_INCREMENT PRIMARY KEY,
-      user_id     INT NOT NULL,
-      title       VARCHAR(500),
-      date        VARCHAR(100),
-      summary     TEXT,
-      notes       TEXT,
-      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      user_id    INT NOT NULL,
+      title      VARCHAR(500),
+      date       VARCHAR(100),
+      summary    TEXT,
+      notes      TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS dna_testing (
-      id          INT AUTO_INCREMENT PRIMARY KEY,
-      user_id     INT NOT NULL,
-      name        VARCHAR(255),
-      company     VARCHAR(100),
-      test_date   VARCHAR(100),
-      kit_number  VARCHAR(100),
-      notes       TEXT,
-      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      id         INT AUTO_INCREMENT PRIMARY KEY,
+      user_id    INT NOT NULL,
+      name       VARCHAR(255),
+      company    VARCHAR(100),
+      test_date  VARCHAR(100),
+      kit_number VARCHAR(100),
+      notes      TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS dna_matches (
-      id              INT AUTO_INCREMENT PRIMARY KEY,
-      user_id         INT NOT NULL,
-      match_name      VARCHAR(255),
-      shared_cm       DECIMAL(10,2),
-      relationship    VARCHAR(100),
-      company         VARCHAR(100),
-      notes           TEXT,
-      created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      id           INT AUTO_INCREMENT PRIMARY KEY,
+      user_id      INT NOT NULL,
+      match_name   VARCHAR(255),
+      shared_cm    DECIMAL(10,2),
+      relationship VARCHAR(100),
+      company      VARCHAR(100),
+      notes        TEXT,
+      created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS archives (
@@ -135,7 +134,7 @@ async function setup() {
       image_url   VARCHAR(500),
       metadata    JSON,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS collections (
@@ -144,7 +143,7 @@ async function setup() {
       name        VARCHAR(500),
       description TEXT,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   ];
 
