@@ -1,7 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────────────
 // db-mysql.js — MySQL data layer for Krio Griot.
 // All queries are scoped by user_id for multi-tenancy.
-// ─────────────────────────────────────────────────────────────────────────────
 let _pool = null;
 function pool() {
   if (_pool) return _pool;
@@ -41,6 +39,28 @@ async function getUserByEmail(email) {
 async function getUserById(id) {
   const rows = await q('SELECT id, email, name, plan, created_at FROM users WHERE id = ?', [id]);
   return rows[0] || null;
+}
+
+async function updateUserPassword(userId, passwordHash) {
+  await pool().execute('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, userId]);
+}
+
+// ── Password reset tokens ──────────────────────────────────────────────────────
+async function storeResetToken(userId, token, expiresAt) {
+  await pool().execute('DELETE FROM password_reset_tokens WHERE user_id = ?', [userId]);
+  await pool().execute(
+    'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
+    [userId, token, expiresAt]
+  );
+}
+
+async function getResetToken(token) {
+  const rows = await q('SELECT * FROM password_reset_tokens WHERE token = ?', [token]);
+  return rows[0] || null;
+}
+
+async function clearResetToken(token) {
+  await pool().execute('DELETE FROM password_reset_tokens WHERE token = ?', [token]);
 }
 
 // ── People ─────────────────────────────────────────────────────────────────────
@@ -334,7 +354,8 @@ async function saveAncestor(userId, fields) {
 }
 
 module.exports = {
-  createUser, getUserByEmail, getUserById,
+  createUser, getUserByEmail, getUserById, updateUserPassword,
+  storeResetToken, getResetToken, clearResetToken,
   getAllAncestors, getAncestorProfile, createPerson, updatePerson, deletePerson,
   saveFamilyConnection, removeFamilyConnection, getFamilyConnections,
   getFamilyTreeData,

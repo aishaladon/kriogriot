@@ -48,8 +48,29 @@
     }
     .btn:hover { opacity: 0.9; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .error { color: #e57373; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .btn-ghost {
+      width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #333;
+      background: transparent; color: #888; font-size: 0.9rem;
+      cursor: pointer; transition: all .2s; margin-top: 8px;
+    }
+    .btn-ghost:hover { border-color: #555; color: #e8e0d0; }
+    .error   { color: #e57373; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
     .success { color: #81c784; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .forgot-link {
+      display: block; text-align: right; font-size: 0.82rem;
+      color: #888; text-decoration: none; margin-top: -0.5rem; margin-bottom: 1rem;
+    }
+    .forgot-link:hover { color: #c8a96e; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.85rem; color: #888; cursor: pointer;
+      margin-bottom: 1.5rem; background: none; border: none; padding: 0;
+    }
+    .back-link:hover { color: #c8a96e; }
+    .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.4rem; }
+    .section-sub   { font-size: 0.85rem; color: #888; margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
@@ -59,36 +80,79 @@
     <p>Legacy Research &amp; Genealogy</p>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" id="tab-login" onclick="showTab('login')">Sign In</button>
-    <button class="tab" id="tab-register" onclick="showTab('register')">Create Account</button>
+  <!-- ── Login / Register tabs ── -->
+  <div id="view-auth" class="view active">
+    <div class="tabs">
+      <button class="tab active" id="tab-login" onclick="showTab('login')">Sign In</button>
+      <button class="tab" id="tab-register" onclick="showTab('register')">Create Account</button>
+    </div>
+
+    <div id="error-msg" class="error"></div>
+    <div id="success-msg" class="success"></div>
+
+    <!-- Login form -->
+    <form id="form-login" onsubmit="doLogin(event)">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" required />
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" required />
+      <a class="forgot-link" href="#" onclick="showView('forgot'); return false;">Forgot password?</a>
+      <button class="btn" type="submit" id="btn-login">Sign In</button>
+    </form>
+
+    <!-- Register form -->
+    <form id="form-register" style="display:none" onsubmit="doRegister(event)">
+      <label>Name</label>
+      <input type="text" id="reg-name" placeholder="Your name" />
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" required />
+      <label>Password</label>
+      <input type="password" id="reg-password" placeholder="Min 8 characters" required />
+      <button class="btn" type="submit" id="btn-register">Create Account</button>
+    </form>
   </div>
 
-  <div id="error-msg" class="error"></div>
-  <div id="success-msg" class="success"></div>
+  <!-- ── Forgot password ── -->
+  <div id="view-forgot" class="view">
+    <button class="back-link" onclick="showView('auth')">&#8592; Back to Sign In</button>
+    <div class="section-title">Forgot Password</div>
+    <div class="section-sub">Enter your email and we'll send you a reset link.</div>
 
-  <!-- Login form -->
-  <form id="form-login" onsubmit="doLogin(event)">
-    <label>Email</label>
-    <input type="email" id="login-email" placeholder="you@example.com" required />
-    <label>Password</label>
-    <input type="password" id="login-password" placeholder="••••••••" required />
-    <button class="btn" type="submit" id="btn-login">Sign In</button>
-  </form>
+    <div id="forgot-error" class="error"></div>
+    <div id="forgot-success" class="success"></div>
 
-  <!-- Register form -->
-  <form id="form-register" style="display:none" onsubmit="doRegister(event)">
-    <label>Name</label>
-    <input type="text" id="reg-name" placeholder="Your name" />
-    <label>Email</label>
-    <input type="email" id="reg-email" placeholder="you@example.com" required />
-    <label>Password</label>
-    <input type="password" id="reg-password" placeholder="Min 8 characters" required />
-    <button class="btn" type="submit" id="btn-register">Create Account</button>
-  </form>
+    <form onsubmit="doForgot(event)">
+      <label>Email</label>
+      <input type="email" id="forgot-email" placeholder="you@example.com" required />
+      <button class="btn" type="submit" id="btn-forgot">Send Reset Link</button>
+    </form>
+  </div>
+
+  <!-- ── Reset password ── -->
+  <div id="view-reset" class="view">
+    <button class="back-link" onclick="showView('auth')">&#8592; Back to Sign In</button>
+    <div class="section-title">Reset Password</div>
+    <div class="section-sub">Enter your new password below.</div>
+
+    <div id="reset-error" class="error"></div>
+    <div id="reset-success" class="success"></div>
+
+    <form onsubmit="doReset(event)">
+      <label>New Password</label>
+      <input type="password" id="reset-password" placeholder="Min 8 characters" required />
+      <label>Confirm Password</label>
+      <input type="password" id="reset-confirm" placeholder="Re-enter password" required />
+      <button class="btn" type="submit" id="btn-reset">Set New Password</button>
+    </form>
+  </div>
 </div>
 
 <script>
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+}
+
 function showTab(tab) {
   document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
   document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
@@ -97,21 +161,17 @@ function showTab(tab) {
   clearMessages();
 }
 
-function showError(msg) {
-  const el = document.getElementById('error-msg');
+function showError(id, msg) {
+  const el = document.getElementById(id);
   el.textContent = msg; el.style.display = 'block';
-  document.getElementById('success-msg').style.display = 'none';
 }
-
-function showSuccess(msg) {
-  const el = document.getElementById('success-msg');
+function showSuccess(id, msg) {
+  const el = document.getElementById(id);
   el.textContent = msg; el.style.display = 'block';
-  document.getElementById('error-msg').style.display = 'none';
 }
-
 function clearMessages() {
-  document.getElementById('error-msg').style.display = 'none';
-  document.getElementById('success-msg').style.display = 'none';
+  ['error-msg','success-msg','forgot-error','forgot-success','reset-error','reset-success']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
 }
 
 async function doLogin(e) {
@@ -129,12 +189,12 @@ async function doLogin(e) {
       }),
     });
     const data = await res.json();
-    if (!res.ok) { showError(data.error || 'Login failed.'); return; }
+    if (!res.ok) { showError('error-msg', data.error || 'Login failed.'); return; }
     localStorage.setItem('kg_token', data.token);
     localStorage.setItem('kg_user',  JSON.stringify(data.user));
     window.location.href = '/app';
   } catch (err) {
-    showError('Network error. Please try again.');
+    showError('error-msg', 'Network error. Please try again.');
   } finally {
     btn.disabled = false; btn.textContent = 'Sign In';
   }
@@ -156,22 +216,82 @@ async function doRegister(e) {
       }),
     });
     const data = await res.json();
-    if (!res.ok) { showError(data.error || 'Registration failed.'); return; }
+    if (!res.ok) { showError('error-msg', data.error || 'Registration failed.'); return; }
     localStorage.setItem('kg_token', data.token);
     localStorage.setItem('kg_user',  JSON.stringify(data.user));
     window.location.href = '/app';
   } catch (err) {
-    showError('Network error. Please try again.');
+    showError('error-msg', 'Network error. Please try again.');
   } finally {
     btn.disabled = false; btn.textContent = 'Create Account';
   }
 }
 
-// If already logged in, redirect to app
-if (localStorage.getItem('kg_token')) window.location.href = '/app';
+async function doForgot(e) {
+  e.preventDefault();
+  clearMessages();
+  const btn = document.getElementById('btn-forgot');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: document.getElementById('forgot-email').value }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError('forgot-error', data.error || 'Something went wrong.'); return; }
+    showSuccess('forgot-success', 'If an account exists for that email, a reset link has been sent. Check your inbox.');
+  } catch (err) {
+    showError('forgot-error', 'Network error. Please try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send Reset Link';
+  }
+}
 
-// Show register tab if URL says /register
-if (window.location.pathname === '/register') showTab('register');
+async function doReset(e) {
+  e.preventDefault();
+  clearMessages();
+  const password = document.getElementById('reset-password').value;
+  const confirm  = document.getElementById('reset-confirm').value;
+  if (password !== confirm) { showError('reset-error', 'Passwords do not match.'); return; }
+  const token = new URLSearchParams(window.location.search).get('token');
+  if (!token) { showError('reset-error', 'Invalid reset link. Please request a new one.'); return; }
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError('reset-error', data.error || 'Reset failed.'); return; }
+    showSuccess('reset-success', 'Password updated! Redirecting to sign in…');
+    setTimeout(() => { window.location.href = '/login'; }, 2000);
+  } catch (err) {
+    showError('reset-error', 'Network error. Please try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Set New Password';
+  }
+}
+
+// Route to correct view based on URL
+const path = window.location.pathname;
+const params = new URLSearchParams(window.location.search);
+if (params.get('token')) {
+  showView('reset');
+} else if (path === '/forgot-password') {
+  showView('forgot');
+} else if (path === '/register') {
+  showView('auth'); showTab('register');
+} else {
+  showView('auth');
+}
+
+// If already logged in and not on reset page, redirect to app
+if (localStorage.getItem('kg_token') && !params.get('token')) {
+  window.location.href = '/app';
+}
 </script>
 </body>
 </html>

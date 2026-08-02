@@ -64,6 +64,20 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, '../client'), { index: false }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// ── Email helper ───────────────────────────────────────────────────────────────
+function getMailer() {
+  const nodemailer = require('nodemailer');
+  return nodemailer.createTransport({
+    host:   process.env.SMTP_HOST || 'smtp.hostinger.com',
+    port:   Number(process.env.SMTP_PORT || 587),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
 // ── Auth routes (public) ───────────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
   const { email, password, name } = req.body;
@@ -108,8 +122,63 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
   }
 });
 
-// Logout is handled client-side (clear token). This endpoint is for completeness.
 app.post('/api/auth/logout', (req, res) => res.json({ ok: true }));
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required.' });
+  try {
+    const user = await db.getUserByEmail(email);
+    if (!user) return res.json({ ok: true }); // don't reveal if email exists
+    const token   = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+    await db.storeResetToken(user.id, token, expires);
+    const appUrl   = process.env.APP_URL || 'https://kriogriot.com';
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+    const mailer = getMailer();
+    await mailer.sendMail({
+      from:    process.env.SMTP_FROM || process.env.SMTP_USER,
+      to:      user.email,
+      subject: 'Krio Griot — Reset Your Password',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto">
+          <h2 style="color:#c8a96e">Krio Griot</h2>
+          <p>Hi ${user.name || 'there'},</p>
+          <p>Click the button below to reset your password. This link expires in <strong>1 hour</strong>.</p>
+          <p style="margin:2rem 0">
+            <a href="${resetUrl}" style="background:#c8a96e;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Reset Password</a>
+          </p>
+          <p style="color:#888;font-size:0.85rem">If you did not request a password reset, you can ignore this email.</p>
+        </div>
+      `,
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Forgot password error:', err.message);
+    res.status(500).json({ error: 'Failed to send reset email. Please check your email address and try again.' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Token and password are required.' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  try {
+    const record = await db.getResetToken(token);
+    if (!record) return res.status(400).json({ error: 'Invalid or expired reset link.' });
+    if (new Date(record.expires_at) < new Date()) {
+      await db.clearResetToken(token);
+      return res.status(400).json({ error: 'Reset link has expired. Please request a new one.' });
+    }
+    const passwordHash = await hashPassword(password);
+    await db.updateUserPassword(record.user_id, passwordHash);
+    await db.clearResetToken(token);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Reset password error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ── Health check (public) ──────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -180,7 +249,6 @@ async function getRelationshipsFor(userId, recordId) {
     const peopleById = {};
     for (const p of (people || [])) peopleById[p.id] = p;
 
-    // Build overrides from DB connections
     const connections = await db.getFamilyConnections(userId);
     const overrides = {};
     for (const c of connections) {
@@ -406,6 +474,8 @@ app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../client/landing.
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, '../client/index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../client/login.html')));
 app.get('/register', (req, res) => res.sendFile(path.join(__dirname, '../client/login.html')));
+app.get('/forgot-password', (req, res) => res.sendFile(path.join(__dirname, '../client/login.html')));
+app.get('/reset-password', (req, res) => res.sendFile(path.join(__dirname, '../client/login.html')));
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../client/landing.html')));
 
 // ── Start ──────────────────────────────────────────────────────────────────────
@@ -414,5 +484,6 @@ app.listen(PORT, () => {
   console.log(`\n🌿 Krio Griot server running at http://localhost:${PORT}`);
   console.log(`   Anthropic API key : ${process.env.ANTHROPIC_API_KEY ? '✓ loaded' : '✗ MISSING'}`);
   console.log(`   MySQL host        : ${process.env.MYSQL_HOST || 'localhost'}`);
-  console.log(`   MySQL database    : ${process.env.MYSQL_DATABASE || '(not set)'}\n`);
+  console.log(`   MySQL database    : ${process.env.MYSQL_DATABASE || '(not set)'}`);
+  console.log(`   SMTP user         : ${process.env.SMTP_USER || '(not set — forgot password email disabled)'}\n`);
 });
