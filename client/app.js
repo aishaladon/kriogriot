@@ -199,12 +199,46 @@ function goBack() {
   showPage(state.previousPage || 'ancestors');
 }
 
+// ── Auth ───────────────────────────────────────────────────────────────────────
+function getToken() { return localStorage.getItem('kg_token'); }
+
+function logout() {
+  localStorage.removeItem('kg_token');
+  localStorage.removeItem('kg_user');
+  window.location.href = '/login';
+}
+
+// Guard: redirect to login if no token
+(function checkAuth() {
+  if (!getToken()) window.location.href = '/login';
+})();
+
+// Show logged-in user name in sidebar if element exists
+(function showUser() {
+  const stored = localStorage.getItem('kg_user');
+  if (!stored) return;
+  try {
+    const user = JSON.parse(stored);
+    const el = document.getElementById('sidebar-user-name');
+    if (el) el.textContent = user.name || user.email;
+  } catch (_) {}
+})();
+
 // ── API helpers ───────────────────────────────────────────────────────────────
 async function api(path, options = {}) {
+  const token = getToken();
   const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
     ...options,
   });
+  if (res.status === 401) {
+    logout();
+    return;
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
@@ -2218,7 +2252,7 @@ async function saveCurrentMetadata() {
       const blob     = base64ToBlob(state.currentImageB64, state.currentImageType);
       const formData = new FormData();
       formData.append('image', blob, `archive-${Date.now()}.${state.currentImageType.split('/')[1] || 'jpg'}`);
-      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData });
+      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData, headers: { Authorization: 'Bearer ' + getToken() } });
       if (uploadRes.ok) {
         const uploadData = await uploadRes.json();
         imageUrl = uploadData.imageUrl;
@@ -2322,7 +2356,7 @@ async function saveBulkResult(index) {
       const blob     = base64ToBlob(result.b64.replace(/^data:[^;]+;base64,/, ''), result.mimeType);
       const formData = new FormData();
       formData.append('image', blob, `archive-${Date.now()}-${index}.${result.mimeType.split('/')[1] || 'jpg'}`);
-      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData });
+      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData, headers: { Authorization: 'Bearer ' + getToken() } });
       if (uploadRes.ok) {
         const uploadData = await uploadRes.json();
         imageUrl = uploadData.imageUrl;
@@ -2369,7 +2403,7 @@ async function handleModalImageUpload(input, fid, uploadEndpoint, urlFieldId) {
   try {
     const formData = new FormData();
     formData.append('image', file, file.name);
-    const res  = await fetch(endpoint, { method: 'POST', body: formData });
+    const res  = await fetch(endpoint, { method: 'POST', body: formData, headers: { Authorization: 'Bearer ' + getToken() } });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Upload failed');
 
@@ -3379,23 +3413,20 @@ function saveUser(u) { localStorage.setItem('lr_user', JSON.stringify(u)); }
 
 // ── Sidebar profile bootstrap ──────────────────────────────────────────────────
 function initSidebarProfile() {
-  const user = getUser();
+  let user = null;
+  try { user = JSON.parse(localStorage.getItem('kg_user') || 'null'); } catch (_) {}
   if (!user) return;
-  const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'My Profile';
+  const name = user.name || user.email || 'My Profile';
   const el = document.getElementById('sidebar-username');
   if (el) el.textContent = name;
   const planEl = document.getElementById('sidebar-plan-label');
   if (planEl) planEl.textContent = user.plan === 'researcher' ? 'Researcher Plan' : 'Basic Plan';
-  // Popup
   const ppName = document.getElementById('pp-name');
   if (ppName) ppName.textContent = name;
   const ppEmail = document.getElementById('pp-email');
   if (ppEmail) ppEmail.textContent = user.email || '';
   const ppBadge = document.getElementById('pp-plan-badge');
-  if (ppBadge) {
-    ppBadge.textContent = user.plan === 'researcher' ? 'Researcher' : 'Basic';
-    if (user.plan === 'researcher') ppBadge.classList.add('paid');
-  }
+  if (ppBadge) ppBadge.textContent = user.plan === 'researcher' ? 'Researcher' : 'Basic';
 }
 
 // ── Profile popup toggle ──────────────────────────────────────────────────────
@@ -3563,7 +3594,7 @@ function submitHelpBug() {
 function handleAppLogout() {
   closeProfileMenu();
   if (confirm('Sign out of Krio Griot?')) {
-    window.location.href = '/';
+    logout();
   }
 }
 

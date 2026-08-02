@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Krio Griot — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f0f;
+      color: #e8e0d0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+    }
+    .logo { text-align: center; margin-bottom: 2rem; }
+    .logo h1 { font-size: 1.8rem; font-weight: 700; color: #c8a96e; }
+    .logo p  { font-size: 0.85rem; color: #888; margin-top: 4px; }
+    .tabs { display: flex; gap: 4px; background: #111; border-radius: 8px; padding: 4px; margin-bottom: 1.5rem; }
+    .tab {
+      flex: 1; padding: 8px; border: none; border-radius: 6px;
+      background: transparent; color: #888; font-size: 0.9rem; cursor: pointer; transition: all .2s;
+    }
+    .tab.active { background: #2a2a2a; color: #e8e0d0; }
+    label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid #333; background: #111; color: #e8e0d0;
+      font-size: 0.95rem; margin-bottom: 1rem;
+    }
+    input:focus { outline: none; border-color: #c8a96e; }
+    .btn {
+      width: 100%; padding: 11px; border-radius: 8px; border: none;
+      background: #c8a96e; color: #0f0f0f; font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error { color: #e57373; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .success { color: #81c784; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>Krio Griot</h1>
+    <p>Legacy Research &amp; Genealogy</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-login" onclick="showTab('login')">Sign In</button>
+    <button class="tab" id="tab-register" onclick="showTab('register')">Create Account</button>
+  </div>
+
+  <div id="error-msg" class="error"></div>
+  <div id="success-msg" class="success"></div>
+
+  <!-- Login form -->
+  <form id="form-login" onsubmit="doLogin(event)">
+    <label>Email</label>
+    <input type="email" id="login-email" placeholder="you@example.com" required />
+    <label>Password</label>
+    <input type="password" id="login-password" placeholder="••••••••" required />
+    <button class="btn" type="submit" id="btn-login">Sign In</button>
+  </form>
+
+  <!-- Register form -->
+  <form id="form-register" style="display:none" onsubmit="doRegister(event)">
+    <label>Name</label>
+    <input type="text" id="reg-name" placeholder="Your name" />
+    <label>Email</label>
+    <input type="email" id="reg-email" placeholder="you@example.com" required />
+    <label>Password</label>
+    <input type="password" id="reg-password" placeholder="Min 8 characters" required />
+    <button class="btn" type="submit" id="btn-register">Create Account</button>
+  </form>
+</div>
+
+<script>
+function showTab(tab) {
+  document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  clearMessages();
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('success-msg').style.display = 'none';
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('success-msg');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('error-msg').style.display = 'none';
+}
+
+function clearMessages() {
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('success-msg').style.display = 'none';
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  clearMessages();
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email:    document.getElementById('login-email').value,
+        password: document.getElementById('login-password').value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || 'Login failed.'); return; }
+    localStorage.setItem('kg_token', data.token);
+    localStorage.setItem('kg_user',  JSON.stringify(data.user));
+    window.location.href = '/app';
+  } catch (err) {
+    showError('Network error. Please try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+async function doRegister(e) {
+  e.preventDefault();
+  clearMessages();
+  const btn = document.getElementById('btn-register');
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:     document.getElementById('reg-name').value,
+        email:    document.getElementById('reg-email').value,
+        password: document.getElementById('reg-password').value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || 'Registration failed.'); return; }
+    localStorage.setItem('kg_token', data.token);
+    localStorage.setItem('kg_user',  JSON.stringify(data.user));
+    window.location.href = '/app';
+  } catch (err) {
+    showError('Network error. Please try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+// If already logged in, redirect to app
+if (localStorage.getItem('kg_token')) window.location.href = '/app';
+
+// Show register tab if URL says /register
+if (window.location.pathname === '/register') showTab('register');
+</script>
+</body>
+</html>
