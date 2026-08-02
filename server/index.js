@@ -78,6 +78,21 @@ function getMailer() {
   });
 }
 
+async function sendEmail({ to, subject, html }) {
+  if (!process.env.SMTP_USER) return; // email not configured, skip silently
+  try {
+    const mailer = getMailer();
+    await mailer.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error('Email send error:', err.message);
+  }
+}
+
 // ── Auth routes (public) ───────────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
   const { email, password, name } = req.body;
@@ -89,6 +104,25 @@ app.post('/api/auth/register', async (req, res) => {
     const passwordHash = await hashPassword(password);
     const user  = await db.createUser({ email, passwordHash, name });
     const token = signToken({ userId: user.id, email: user.email });
+
+    // Send welcome email (non-blocking)
+    const appUrl = process.env.APP_URL || 'https://kriogriot.com';
+    sendEmail({
+      to: user.email,
+      subject: 'Welcome to Krio Griot 🌿',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto">
+          <h2 style="color:#c8a96e">Welcome to Krio Griot!</h2>
+          <p>Hi ${user.name || 'there'},</p>
+          <p>Your account has been created. You can now start building your family tree, logging research, and uncovering your ancestry.</p>
+          <p style="margin:2rem 0">
+            <a href="${appUrl}/app" style="background:#c8a96e;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Open Krio Griot</a>
+          </p>
+          <p style="color:#888;font-size:0.85rem">If you did not create this account, please ignore this email.</p>
+        </div>
+      `,
+    });
+
     res.json({ ok: true, token, user: { id: user.id, email: user.email, name: user.name } });
   } catch (err) {
     console.error('Register error:', err.message);
@@ -135,10 +169,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await db.storeResetToken(user.id, token, expires);
     const appUrl   = process.env.APP_URL || 'https://kriogriot.com';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
-    const mailer = getMailer();
-    await mailer.sendMail({
-      from:    process.env.SMTP_FROM || process.env.SMTP_USER,
-      to:      user.email,
+    await sendEmail({
+      to: user.email,
       subject: 'Krio Griot — Reset Your Password',
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:auto">
@@ -485,5 +517,5 @@ app.listen(PORT, () => {
   console.log(`   Anthropic API key : ${process.env.ANTHROPIC_API_KEY ? '✓ loaded' : '✗ MISSING'}`);
   console.log(`   MySQL host        : ${process.env.MYSQL_HOST || 'localhost'}`);
   console.log(`   MySQL database    : ${process.env.MYSQL_DATABASE || '(not set)'}`);
-  console.log(`   SMTP user         : ${process.env.SMTP_USER || '(not set — forgot password email disabled)'}\n`);
+  console.log(`   SMTP user         : ${process.env.SMTP_USER || '(not set — emails disabled)'}\n`);
 });
