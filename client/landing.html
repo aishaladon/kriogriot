@@ -1122,8 +1122,7 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
       <div class="form-group"><label>Email Address</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/></div>
       <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="Your password" autocomplete="current-password"/></div>
       <button class="auth-submit-btn" onclick="handleLogin()">Log In to Krio Griot</button>
-      <div id="login-forgot-box" style="display:none;margin-top:12px;background:rgba(61,220,132,.1);border:1px solid #3DDC84;border-radius:6px;padding:12px;font-size:.82rem;color:#3DDC84;word-break:break-all;"></div>
-      <div class="auth-switch" style="margin-top:14px;"><button onclick="handleLandingForgot()" style="color:#EF9F27;background:none;border:none;cursor:pointer;font-size:.88rem;text-decoration:underline;">Forgot your password?</button></div>
+      <div class="auth-switch" style="margin-top:14px;"><a href="/login" style="color:rgba(192,220,248,.45);font-size:.82rem;text-decoration:none;">Forgot your password? <span style="text-decoration:underline;">Visit the sign in page</span></a></div>
     </div>
   </div>
 </div>
@@ -1244,28 +1243,6 @@ function fmtCard(inp){var v=inp.value.replace(/\D/g,'').substring(0,16);inp.valu
 function fmtExp(inp){var v=inp.value.replace(/\D/g,'').substring(0,4);if(v.length>=3)v=v.substring(0,2)+' / '+v.substring(2);inp.value=v}
 
 // Login (real API)
-async function handleLandingForgot(){
-  var email=document.getElementById('login-email').value.trim();
-  var box=document.getElementById('login-forgot-box');
-  var alertEl=document.getElementById('login-alert');
-  if(!email){ if(alertEl){alertEl.textContent='Enter your email above first.';alertEl.style.display='block';} return; }
-  box.style.display='none';
-  try{
-    var r=await fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
-    var d=await r.json();
-    if(d.resetUrl){
-      box.innerHTML='Email not configured yet. Copy this link to reset your password:<br><br><a href="'+d.resetUrl+'" style="color:#3DDC84;">'+d.resetUrl+'</a>';
-      box.style.display='block';
-    } else {
-      box.innerHTML='Reset link sent — check your inbox.';
-      box.style.display='block';
-    }
-  }catch(e){
-    box.innerHTML='Could not send reset link. Please try again.';
-    box.style.display='block';
-  }
-}
-
 async function handleLogin(){
   var email=document.getElementById('login-email').value.trim();
   var pass=document.getElementById('login-password').value;

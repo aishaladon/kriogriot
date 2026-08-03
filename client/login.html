@@ -4,104 +4,103 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Krio Griot — Sign In</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: #0f0f0f;
-      color: #e8e0d0;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: #04223F;
+      color: #F0F6FC;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 24px;
     }
     .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 12px;
-      padding: 2.5rem;
+      background: #062F58;
+      border: 1px solid rgba(160,200,240,.22);
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
     }
     .logo { text-align: center; margin-bottom: 2rem; }
-    .logo h1 { font-size: 1.8rem; font-weight: 700; color: #c8a96e; }
-    .logo p  { font-size: 0.85rem; color: #888; margin-top: 4px; }
-    .tabs { display: flex; gap: 4px; background: #111; border-radius: 8px; padding: 4px; margin-bottom: 1.5rem; }
-    .tab {
-      flex: 1; padding: 8px; border: none; border-radius: 6px;
-      background: transparent; color: #888; font-size: 0.9rem; cursor: pointer; transition: all .2s;
-    }
-    .tab.active { background: #2a2a2a; color: #e8e0d0; }
-    label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; }
+    .logo svg { display: block; margin: 0 auto 10px; }
+    .logo h1 { font-size: 1.5rem; font-weight: 700; color: #F0F6FC; letter-spacing: -.02em; }
+    .logo p  { font-size: .82rem; color: rgba(192,220,248,.5); margin-top: 4px; }
+    label { display: block; font-size: .82rem; color: rgba(192,220,248,.7); margin-bottom: 6px; font-weight: 500; }
     input {
-      width: 100%; padding: 10px 12px; border-radius: 8px;
-      border: 1px solid #333; background: #111; color: #e8e0d0;
-      font-size: 0.95rem; margin-bottom: 1rem;
+      width: 100%; padding: 10px 13px; border-radius: 5px;
+      border: 1px solid rgba(160,200,240,.22); background: #04223F; color: #F0F6FC;
+      font-size: .95rem; margin-bottom: 1rem; font-family: inherit; outline: none;
+      transition: border-color .15s;
     }
-    input:focus { outline: none; border-color: #c8a96e; }
+    input:focus { border-color: #EF9F27; }
     .btn {
-      width: 100%; padding: 11px; border-radius: 8px; border: none;
-      background: #c8a96e; color: #0f0f0f; font-size: 1rem; font-weight: 600;
-      cursor: pointer; transition: opacity .2s;
+      width: 100%; padding: 11px; border-radius: 5px; border: none;
+      background: #EF9F27; color: #04223F; font-size: .95rem; font-weight: 700;
+      cursor: pointer; transition: opacity .2s; font-family: inherit; letter-spacing: .01em;
     }
-    .btn:hover { opacity: 0.9; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-ghost {
-      width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #333;
-      background: transparent; color: #888; font-size: 0.9rem;
-      cursor: pointer; transition: all .2s; margin-top: 8px;
-    }
-    .btn-ghost:hover { border-color: #555; color: #e8e0d0; }
-    .error   { color: #e57373; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
-    .success { color: #81c784; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+    .btn:hover { opacity: .9; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .error   { color: #e57373; font-size: .83rem; margin-bottom: 1rem; display: none; }
+    .success { color: #3DDC84; font-size: .83rem; margin-bottom: 1rem; display: none; }
     .forgot-link {
-      display: block; text-align: center; font-size: 0.88rem;
-      color: #c8a96e; text-decoration: none; margin-top: 0.75rem;
-      padding: 6px; border-radius: 6px;
+      display: block; text-align: center; font-size: .85rem;
+      color: #EF9F27; background: none; border: none; cursor: pointer;
+      margin-top: 14px; font-family: inherit; text-decoration: underline;
+      text-underline-offset: 2px;
     }
-    .forgot-link:hover { text-decoration: underline; }
+    .forgot-link:hover { opacity: .8; }
     .reset-url-box {
-      background: #111; border: 1px solid #3DDC84; border-radius: 8px;
+      background: rgba(61,220,132,.08); border: 1px solid #3DDC84; border-radius: 6px;
       padding: 14px; font-size: .8rem; color: #3DDC84; word-break: break-all;
-      margin-top: 1rem; display: none;
+      margin-top: 1rem; display: none; line-height: 1.6;
     }
     .reset-url-box a { color: #3DDC84; }
+    .beta-note { text-align: center; font-size: .78rem; color: rgba(192,220,248,.35); margin-top: 1.5rem; }
     .view { display: none; }
     .view.active { display: block; }
     .back-link {
       display: inline-flex; align-items: center; gap: 4px;
-      font-size: 0.85rem; color: #888; cursor: pointer;
-      margin-bottom: 1.5rem; background: none; border: none; padding: 0;
+      font-size: .83rem; color: rgba(192,220,248,.5); cursor: pointer;
+      margin-bottom: 1.5rem; background: none; border: none;
+      padding: 0; font-family: inherit;
     }
-    .back-link:hover { color: #c8a96e; }
-    .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.4rem; }
-    .section-sub   { font-size: 0.85rem; color: #888; margin-bottom: 1.5rem; }
+    .back-link:hover { color: #EF9F27; }
+    .section-title { font-size: 1.05rem; font-weight: 700; color: #F0F6FC; margin-bottom: .3rem; }
+    .section-sub   { font-size: .83rem; color: rgba(192,220,248,.5); margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
 <div class="card">
   <div class="logo">
+    <svg viewBox="0 0 90 90" width="36" height="36" role="img" aria-label="Krio Griot">
+      <path d="M52 18 C68 22 76 40 71 56 C66 72 50 80 36 75 C22 70 15 55 19 42 C23 30 33 22 44 19 C47 18 49 17 52 18 Z" fill="#EF9F27"/>
+      <path d="M44 19 C31 26 22 40 22 53 C22 64 27 71 36 75 C22 70 15 55 19 42 C23 30 33 22 44 19 Z" fill="#D85A30"/>
+      <path d="M52 18 L55 9" stroke="#3DDC84" stroke-width="5" stroke-linecap="round"/>
+      <path d="M55 11 C64 6 72 8 74 12 C67 18 58 17 55 12" fill="#3DDC84"/>
+    </svg>
     <h1>Krio Griot</h1>
     <p>Legacy Research &amp; Genealogy</p>
   </div>
 
-  <!-- ── Login only (registration is invite/admin only during beta) ── -->
+  <!-- ── Sign in ── -->
   <div id="view-auth" class="view active">
     <div id="error-msg" class="error"></div>
     <div id="success-msg" class="success"></div>
 
-    <!-- Login form -->
     <form id="form-login" onsubmit="doLogin(event)">
       <label>Email</label>
-      <input type="email" id="login-email" placeholder="you@example.com" required />
+      <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email" />
       <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••" required />
+      <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
       <button class="btn" type="submit" id="btn-login">Sign In</button>
-      <a class="forgot-link" href="#" onclick="showView('forgot'); return false;">Forgot your password?</a>
     </form>
-    <p style="text-align:center;font-size:.8rem;color:#555;margin-top:1.2rem;">Krio Griot is currently in private beta.</p>
+
+    <button class="forgot-link" onclick="showView('forgot')">Forgot your password?</button>
+    <div id="reset-url-box" class="reset-url-box"></div>
+    <p class="beta-note">Krio Griot is currently in private beta.</p>
   </div>
 
   <!-- ── Forgot password ── -->
@@ -115,10 +114,10 @@
 
     <form onsubmit="doForgot(event)">
       <label>Email</label>
-      <input type="email" id="forgot-email" placeholder="you@example.com" required />
+      <input type="email" id="forgot-email" placeholder="you@example.com" required autocomplete="email" />
       <button class="btn" type="submit" id="btn-forgot">Send Reset Link</button>
     </form>
-    <div id="reset-url-box" class="reset-url-box"></div>
+    <div id="forgot-url-box" class="reset-url-box"></div>
   </div>
 
   <!-- ── Reset password ── -->
@@ -132,9 +131,9 @@
 
     <form onsubmit="doReset(event)">
       <label>New Password</label>
-      <input type="password" id="reset-password" placeholder="Min 8 characters" required />
+      <input type="password" id="reset-password" placeholder="Min 8 characters" required autocomplete="new-password" />
       <label>Confirm Password</label>
-      <input type="password" id="reset-confirm" placeholder="Re-enter password" required />
+      <input type="password" id="reset-confirm" placeholder="Re-enter password" required autocomplete="new-password" />
       <button class="btn" type="submit" id="btn-reset">Set New Password</button>
     </form>
   </div>
@@ -145,7 +144,6 @@ function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
 }
-
 
 function showError(id, msg) {
   const el = document.getElementById(id);
@@ -158,6 +156,9 @@ function showSuccess(id, msg) {
 function clearMessages() {
   ['error-msg','success-msg','forgot-error','forgot-success','reset-error','reset-success']
     .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  ['reset-url-box','forgot-url-box'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
 }
 
 async function doLogin(e) {
@@ -186,37 +187,10 @@ async function doLogin(e) {
   }
 }
 
-async function doRegister(e) {
-  e.preventDefault();
-  clearMessages();
-  const btn = document.getElementById('btn-register');
-  btn.disabled = true; btn.textContent = 'Creating account…';
-  try {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name:     document.getElementById('reg-name').value,
-        email:    document.getElementById('reg-email').value,
-        password: document.getElementById('reg-password').value,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) { showError('error-msg', data.error || 'Registration failed.'); return; }
-    localStorage.setItem('kg_token', data.token);
-    localStorage.setItem('kg_user',  JSON.stringify(data.user));
-    window.location.href = '/app';
-  } catch (err) {
-    showError('error-msg', 'Network error. Please try again.');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Create Account';
-  }
-}
-
 async function doForgot(e) {
   e.preventDefault();
   clearMessages();
-  document.getElementById('reset-url-box').style.display = 'none';
+  const box = document.getElementById('forgot-url-box');
   const btn = document.getElementById('btn-forgot');
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
@@ -228,9 +202,7 @@ async function doForgot(e) {
     const data = await res.json();
     if (!res.ok) { showError('forgot-error', data.error || 'Something went wrong.'); return; }
     if (data.resetUrl) {
-      // Email not configured — show the link directly on screen
-      const box = document.getElementById('reset-url-box');
-      box.innerHTML = '⚠ Email not configured. Copy this link to reset your password:<br><br><a href="' + data.resetUrl + '">' + data.resetUrl + '</a>';
+      box.innerHTML = '&#9888; Email not configured yet. Copy this link to reset your password:<br><br><a href="' + data.resetUrl + '">' + data.resetUrl + '</a>';
       box.style.display = 'block';
     } else {
       showSuccess('forgot-success', 'Reset link sent — check your inbox.');
@@ -260,7 +232,7 @@ async function doReset(e) {
     });
     const data = await res.json();
     if (!res.ok) { showError('reset-error', data.error || 'Reset failed.'); return; }
-    showSuccess('reset-success', 'Password updated! Redirecting to sign in…');
+    showSuccess('reset-success', 'Password updated. Redirecting to sign in…');
     setTimeout(() => { window.location.href = '/login'; }, 2000);
   } catch (err) {
     showError('reset-error', 'Network error. Please try again.');
@@ -269,8 +241,7 @@ async function doReset(e) {
   }
 }
 
-// Route to correct view based on URL
-const path = window.location.pathname;
+const path   = window.location.pathname;
 const params = new URLSearchParams(window.location.search);
 if (params.get('token')) {
   showView('reset');
@@ -280,7 +251,6 @@ if (params.get('token')) {
   showView('auth');
 }
 
-// If already logged in and not on reset page, redirect to app
 if (localStorage.getItem('kg_token') && !params.get('token')) {
   window.location.href = '/app';
 }
