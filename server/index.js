@@ -265,7 +265,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     } catch (emailErr) {
       // Email failed — return the link directly so the user isn't stuck
       console.error('Reset email failed:', emailErr.message);
-      res.json({ ok: true, resetUrl, emailError: true });
+      res.json({ ok: true, resetUrl, emailError: emailErr.message });
     }
   } catch (err) {
     console.error('Forgot password error:', err.message);
