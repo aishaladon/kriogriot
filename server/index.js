@@ -80,8 +80,8 @@ function getMailer() {
 
 async function sendEmail({ to, subject, html }) {
   if (!process.env.SMTP_USER) return; // email not configured, skip silently
+  const mailer = getMailer();
   try {
-    const mailer = getMailer();
     await mailer.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to,
@@ -90,6 +90,7 @@ async function sendEmail({ to, subject, html }) {
     });
   } catch (err) {
     console.error('Email send error:', err.message);
+    throw err; // re-throw so callers know it failed
   }
 }
 
@@ -177,31 +178,39 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const appUrl   = process.env.APP_URL || 'https://kriogriot.com';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-    // If SMTP is not configured, return the reset URL directly (admin/dev fallback)
+    // If SMTP is not configured, return the reset URL directly so admin can use it
     if (!process.env.SMTP_USER) {
-      console.warn('SMTP not configured — returning reset URL in response (dev/admin fallback)');
-      return res.json({ ok: true, resetUrl, notice: 'Email not configured. Use the resetUrl directly.' });
+      console.warn('SMTP not configured — returning reset URL in response');
+      return res.json({ ok: true, resetUrl });
     }
 
-    await sendEmail({
-      to: user.email,
-      subject: 'Krio Griot — Reset Your Password',
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto">
-          <h2 style="color:#c8a96e">Krio Griot</h2>
-          <p>Hi ${user.name || 'there'},</p>
-          <p>Click the button below to reset your password. This link expires in <strong>1 hour</strong>.</p>
-          <p style="margin:2rem 0">
-            <a href="${resetUrl}" style="background:#c8a96e;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Reset Password</a>
-          </p>
-          <p style="color:#888;font-size:0.85rem">If you did not request a password reset, you can ignore this email.</p>
-        </div>
-      `,
-    });
-    res.json({ ok: true });
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Krio Griot — Reset Your Password',
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px">
+            <div style="margin-bottom:20px">
+              <span style="font-size:1.2rem;font-weight:700;color:#EF9F27">Krio Griot</span>
+            </div>
+            <p style="color:#333;margin-bottom:12px">Hi ${user.name || 'there'},</p>
+            <p style="color:#333;margin-bottom:24px">Click the button below to reset your password. This link expires in <strong>1 hour</strong>.</p>
+            <p style="margin-bottom:24px">
+              <a href="${resetUrl}" style="background:#EF9F27;color:#04223F;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;display:inline-block">Reset Password</a>
+            </p>
+            <p style="color:#888;font-size:0.82rem">If you did not request a password reset, you can ignore this email.</p>
+          </div>
+        `,
+      });
+      res.json({ ok: true });
+    } catch (emailErr) {
+      // Email failed — return the link directly so the user isn't stuck
+      console.error('Reset email failed:', emailErr.message);
+      res.json({ ok: true, resetUrl, emailError: true });
+    }
   } catch (err) {
     console.error('Forgot password error:', err.message);
-    res.status(500).json({ error: 'Failed to send reset email. Please check your email address and try again.' });
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 

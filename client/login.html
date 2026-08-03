@@ -202,7 +202,10 @@ async function doForgot(e) {
     const data = await res.json();
     if (!res.ok) { showError('forgot-error', data.error || 'Something went wrong.'); return; }
     if (data.resetUrl) {
-      box.innerHTML = '&#9888; Email not configured yet. Copy this link to reset your password:<br><br><a href="' + data.resetUrl + '">' + data.resetUrl + '</a>';
+      const msg = data.emailError
+        ? '&#9888; Email delivery failed. Click the link below to reset your password:'
+        : '&#9888; Email not yet configured. Click the link below to reset your password:';
+      box.innerHTML = msg + '<br><br><a href="' + data.resetUrl + '">' + data.resetUrl + '</a>';
       box.style.display = 'block';
     } else {
       showSuccess('forgot-success', 'Reset link sent — check your inbox.');
