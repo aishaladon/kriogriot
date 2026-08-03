@@ -270,8 +270,7 @@ app.post('/api/mango', async (req, res) => {
     return res.status(400).json({ error: 'A valid phone number is required.' });
   if (!consent_delivery)
     return res.status(400).json({ error: 'Consent to delivery is required.' });
-  if (state && !RECORD_AVAIL.states[state])
-    return res.status(400).json({ error: 'Invalid state.' });
+  // state is optional and free-form — don't reject unknown values
 
   const clean = s => (s || '').trim().slice(0, 2000);
   const qTrim  = clean(question);
@@ -313,8 +312,8 @@ Request #${rowId}`;
 
     res.json({ ok: true, id: rowId });
   } catch (err) {
-    console.error('Mango POST error:', err.message);
-    res.status(500).json({ error: 'Something went wrong. Please try again.' });
+    console.error('Mango POST error:', err.message, err.stack);
+    res.status(500).json({ error: 'Something went wrong. Please try again.', detail: err.message });
   }
 });
 
