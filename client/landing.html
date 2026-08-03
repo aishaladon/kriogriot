@@ -1235,7 +1235,8 @@ function handleBugReport(){
     if(navLinks){
       var loginLink=navLinks.querySelector('a[onclick*="login-modal"]');
       if(loginLink){
-        loginLink.textContent='Hi, '+user.firstName+' →';
+        var displayName=(user.firstName||(user.name||'').split(' ')[0])||'';
+        loginLink.textContent='Hi, '+displayName+' →';
         loginLink.href='/app';
         loginLink.removeAttribute('onclick');
       }
