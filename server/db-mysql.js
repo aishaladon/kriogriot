@@ -23,12 +23,14 @@ async function q(sql, params = []) {
 }
 
 // ── Users ──────────────────────────────────────────────────────────────────────
-async function createUser({ email, passwordHash, name }) {
+async function createUser({ email, passwordHash, name, plan }) {
+  const validPlans = ['free', 'basic-paid', 'upgrade'];
+  const userPlan = validPlans.includes(plan) ? plan : 'free';
   const result = await pool().execute(
-    'INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)',
-    [email.toLowerCase(), passwordHash, name || null]
+    'INSERT INTO users (email, password_hash, name, plan) VALUES (?, ?, ?, ?)',
+    [email.toLowerCase(), passwordHash, name || null, userPlan]
   );
-  return { id: result[0].insertId, email, name };
+  return { id: result[0].insertId, email, name, plan: userPlan };
 }
 
 async function getUserByEmail(email) {

@@ -94,15 +94,22 @@ async function sendEmail({ to, subject, html }) {
 }
 
 // ── Auth routes (public) ───────────────────────────────────────────────────────
+
+// Registration is admin-only during beta. Requires ADMIN_KEY env var in request header or body.
 app.post('/api/auth/register', async (req, res) => {
-  const { email, password, name } = req.body;
+  const adminKey = process.env.ADMIN_KEY;
+  const providedKey = req.headers['x-admin-key'] || req.body.adminKey;
+  if (!adminKey || providedKey !== adminKey)
+    return res.status(403).json({ error: 'Registration is currently by invitation only.' });
+
+  const { email, password, name, plan } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   try {
     const existing = await db.getUserByEmail(email);
     if (existing) return res.status(409).json({ error: 'An account with this email already exists.' });
     const passwordHash = await hashPassword(password);
-    const user  = await db.createUser({ email, passwordHash, name });
+    const user  = await db.createUser({ email, passwordHash, name, plan });
     const token = signToken({ userId: user.id, email: user.email });
 
     // Send welcome email (non-blocking)
@@ -621,6 +628,9 @@ app.get('/api/mango', requireAuth, async (req, res) => {
 
 app.get('/admin/mango', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/admin-mango.html'));
+});
+app.get('/admin/create-user', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/admin-create-user.html'));
 });
 
 // ── Pages ──────────────────────────────────────────────────────────────────────
