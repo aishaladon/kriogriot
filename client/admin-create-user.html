@@ -127,7 +127,10 @@ async function doCreate(e) {
       errEl.style.display = 'block';
       return;
     }
-    sucEl.textContent = 'Account created successfully.';
+    const emailNote = data.emailSent
+      ? '&#10003; Welcome email sent.'
+      : `&#9888; Welcome email not sent${data.emailError ? ': ' + data.emailError : ' (SMTP not configured)'}. Share login details manually.`;
+    sucEl.innerHTML = 'Account created successfully.<br><span style="font-size:.82rem;opacity:.8">' + emailNote + '</span>';
     sucEl.style.display = 'block';
     resEl.innerHTML = `
       <strong>Name</strong>  ${data.user.name || '(none)'}<br>

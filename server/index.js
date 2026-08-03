@@ -113,25 +113,52 @@ app.post('/api/auth/register', async (req, res) => {
     const user  = await db.createUser({ email, passwordHash, name, plan });
     const token = signToken({ userId: user.id, email: user.email });
 
-    // Send welcome email (non-blocking)
     const appUrl = process.env.APP_URL || 'https://kriogriot.com';
-    sendEmail({
-      to: user.email,
-      subject: 'Welcome to Krio Griot 🌿',
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto">
-          <h2 style="color:#c8a96e">Welcome to Krio Griot!</h2>
-          <p>Hi ${user.name || 'there'},</p>
-          <p>Your account has been created. You can now start building your family tree, logging research, and uncovering your ancestry.</p>
-          <p style="margin:2rem 0">
-            <a href="${appUrl}/app" style="background:#c8a96e;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Open Krio Griot</a>
-          </p>
-          <p style="color:#888;font-size:0.85rem">If you did not create this account, please ignore this email.</p>
-        </div>
-      `,
-    });
+    let emailSent = false;
+    let emailError = null;
 
-    res.json({ ok: true, token, user: { id: user.id, email: user.email, name: user.name } });
+    if (process.env.SMTP_USER) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: 'Welcome to Krio Griot — Your Account Is Ready',
+          html: `
+            <div style="font-family:ui-sans-serif,system-ui,sans-serif;background:#04223F;padding:32px 16px;min-height:100%">
+              <div style="max-width:480px;margin:auto;background:#062F58;border-radius:10px;overflow:hidden;border:1px solid rgba(160,200,240,.18)">
+                <div style="background:#062F58;padding:32px 32px 24px;text-align:center">
+                  <div style="font-size:1.4rem;font-weight:700;color:#F0F6FC;letter-spacing:-.02em">Krio Griot</div>
+                  <div style="font-size:.8rem;color:rgba(192,220,248,.45);margin-top:4px">Legacy Research &amp; Genealogy</div>
+                </div>
+                <div style="padding:0 32px 32px">
+                  <h2 style="color:#EF9F27;font-size:1.15rem;margin:0 0 16px">Welcome, ${user.name || 'there'}.</h2>
+                  <p style="color:rgba(240,246,252,.85);line-height:1.6;margin:0 0 12px">
+                    Your Krio Griot account has been created. You now have access to the platform to begin building your family tree, logging your research, and preserving the stories that matter most.
+                  </p>
+                  <p style="color:rgba(240,246,252,.85);line-height:1.6;margin:0 0 24px">
+                    This platform was built for us, by us — a private space for your lineage, your records, and your legacy.
+                  </p>
+                  <div style="background:rgba(0,0,0,.2);border-radius:6px;padding:16px;margin-bottom:24px">
+                    <div style="color:rgba(192,220,248,.6);font-size:.78rem;margin-bottom:6px">YOUR LOGIN</div>
+                    <div style="color:#F0F6FC;font-size:.9rem"><strong>Email:</strong> ${user.email}</div>
+                    <div style="color:#F0F6FC;font-size:.9rem;margin-top:4px"><strong>Password:</strong> the one you were given when your account was set up</div>
+                  </div>
+                  <a href="${appUrl}/login" style="display:block;text-align:center;background:#EF9F27;color:#04223F;padding:13px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-size:.95rem;letter-spacing:.01em">Sign In to Krio Griot</a>
+                  <p style="color:rgba(192,220,248,.3);font-size:.75rem;text-align:center;margin-top:20px;line-height:1.5">
+                    If you were not expecting this email, you can ignore it.<br>Questions? Reply to <a href="mailto:support@kriogriot.com" style="color:#EF9F27">support@kriogriot.com</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          `,
+        });
+        emailSent = true;
+      } catch (err) {
+        emailError = err.message;
+        console.error('Welcome email failed:', err.message);
+      }
+    }
+
+    res.json({ ok: true, token, user: { id: user.id, email: user.email, name: user.name, plan: user.plan }, emailSent, emailError: emailError || (!process.env.SMTP_USER ? 'SMTP not configured' : null) });
   } catch (err) {
     console.error('Register error:', err.message);
     res.status(500).json({ error: err.message });
