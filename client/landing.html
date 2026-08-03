@@ -21,7 +21,7 @@ section{border-bottom:1px solid var(--rule)}
   font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mango);margin:0 0 16px}
 
 .mast{display:flex;align-items:center;justify-content:space-between;gap:16px;
-  padding:18px 0;flex-wrap:wrap;border-bottom:1px solid var(--rule)}
+  padding:18px 0;border-bottom:1px solid var(--rule);position:relative}
 .brand{display:flex;align-items:center;gap:12px}
 .brand p{margin:0;font-size:18px;font-weight:600;color:var(--white);line-height:1.3}
 .brand span{display:block;font-size:11.5px;letter-spacing:.13em;color:var(--pale);margin-top:1px}
@@ -30,6 +30,19 @@ section{border-bottom:1px solid var(--rule)}
 .nav a:hover{color:var(--green)}
 .nav a.navcta{border:1px solid var(--green);color:var(--green);padding:6px 14px;border-radius:2px}
 .nav a.navcta:hover{background:var(--green);color:#04321C}
+.ham-btn{display:none;background:none;border:0;color:var(--pale);cursor:pointer;padding:6px;line-height:0;margin-left:auto}
+.ham-btn:hover{color:var(--white)}
+.ham-drawer{display:none;position:absolute;top:100%;right:0;z-index:200;
+  background:#062F58;border:1px solid var(--rule);border-top:none;
+  min-width:200px;padding:8px 0}
+.ham-drawer.open{display:block}
+.ham-drawer a{display:block;padding:11px 20px;color:var(--body);text-decoration:none;font-size:15px}
+.ham-drawer a:hover{color:var(--green);background:rgba(255,255,255,.04)}
+.ham-drawer a.navcta{color:var(--green);font-weight:600}
+@media(max-width:720px){
+  .nav{display:none}
+  .ham-btn{display:flex;align-items:center}
+}
 html{scroll-behavior:smooth}
 section[id]{scroll-margin-top:20px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
@@ -280,7 +293,7 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
   .mangoBG-mobile{
     display:block;
     position:absolute;
-    top:-10px;right:-4%;
+    top:38%;right:-4%;
     width:min(480px,92vw);
     height:auto;
     z-index:0;
@@ -360,9 +373,22 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
     </svg>
     <p>Krio Griot<span class="mono">NAMED, NOT COUNTED</span></p>
   </div>
-  <nav class="nav">
-    <a href="/about.html">About</a><a href="#break">The 1870 break</a><a href="#knowing">How I know</a><a href="#work">What I do</a><a href="#plans">Plans</a><a href="#plans" class="navcta">Start free</a><a href="#" onclick="openModal('login-modal'); return false;">Log in</a>
+  <nav class="nav" id="main-nav">
+    <a href="/about.html">About</a><a href="#break">The 1870 break</a><a href="#knowing">How I know</a><a href="#work">What I do</a><a href="#plans">Plans</a><a href="#plans" class="navcta">Start free</a><a href="#" onclick="openModal('login-modal'); return false;" id="loginLink">Log in</a>
   </nav>
+  <button class="ham-btn" id="ham-btn" aria-label="Open menu" aria-expanded="false"
+    onclick="var d=document.getElementById('ham-drawer'),o=d.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <div class="ham-drawer" id="ham-drawer">
+    <a href="/about.html">About</a>
+    <a href="#break" onclick="document.getElementById('ham-drawer').classList.remove('open')">The 1870 break</a>
+    <a href="#knowing" onclick="document.getElementById('ham-drawer').classList.remove('open')">How I know</a>
+    <a href="#work" onclick="document.getElementById('ham-drawer').classList.remove('open')">What I do</a>
+    <a href="#plans" onclick="document.getElementById('ham-drawer').classList.remove('open')">Plans</a>
+    <a href="#plans" class="navcta" onclick="document.getElementById('ham-drawer').classList.remove('open')">Start free</a>
+    <a href="#" onclick="document.getElementById('ham-drawer').classList.remove('open');openModal('login-modal');return false;">Log in</a>
+  </div>
 </div>
 </div>
 
@@ -1279,19 +1305,30 @@ function handleBugReport(){
   var token=localStorage.getItem('kg_token');
   var user=null;try{user=JSON.parse(localStorage.getItem('kg_user'))}catch(e){}
   if(token&&user){
-    // Replace "Log in" nav link with greeting + open app
-    var navLinks=document.querySelector('.nav');
-    if(navLinks){
-      var loginLink=navLinks.querySelector('a[onclick*="login-modal"]');
-      if(loginLink){
-        var displayName=(user.firstName||(user.name||'').split(' ')[0])||'';
-        loginLink.textContent='Hi, '+displayName+' →';
-        loginLink.href='/app';
-        loginLink.removeAttribute('onclick');
+    var displayName=(user.firstName||(user.name||'').trim().split(/\s+/)[0])||'';
+    var greeting=displayName?'Hi, '+displayName+' →':'Open app →';
+    // Update both desktop nav and mobile drawer
+    [document.querySelector('.nav'), document.getElementById('ham-drawer')].forEach(function(container){
+      if(!container) return;
+      var link=container.querySelector('a[onclick*="login-modal"]')||container.querySelector('a[onclick*="openModal"]');
+      if(link){
+        link.textContent=greeting;
+        link.href='/app';
+        link.removeAttribute('onclick');
       }
-    }
+    });
   }
 })();
+
+// Close ham-drawer when clicking outside
+document.addEventListener('click',function(e){
+  var drawer=document.getElementById('ham-drawer');
+  var btn=document.getElementById('ham-btn');
+  if(drawer&&drawer.classList.contains('open')&&!drawer.contains(e.target)&&e.target!==btn&&!btn.contains(e.target)){
+    drawer.classList.remove('open');
+    btn.setAttribute('aria-expanded','false');
+  }
+});
 
 // Escape key closes any open modal
 document.addEventListener('keydown',function(e){
