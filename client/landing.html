@@ -296,6 +296,54 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
   #stage:hover .wv rect{animation:none}
   #stage:hover .doc{transform:none}
 }
+
+/* ── Griot's Mango modal ──────────────────────────────────────────────────── */
+.gmOv{position:fixed;inset:0;background:rgba(2,14,26,.72);z-index:900;
+  display:flex;align-items:center;justify-content:center;padding:18px;
+  opacity:0;pointer-events:none;transition:opacity .35s ease;overflow-y:auto}
+.gmOv.open{opacity:1;pointer-events:auto}
+.gmBox{background:#04223F;border:1px solid #2A6DB0;border-radius:4px;max-width:660px;width:100%;
+  padding:24px 22px;position:relative;transform:translateY(14px);transition:transform .35s ease;
+  max-height:92vh;overflow-y:auto}
+.gmOv.open .gmBox{transform:none}
+.gmX{position:absolute;top:12px;right:12px;background:none;border:0;color:#C7DDF3;
+  cursor:pointer;padding:6px;line-height:0}
+.gmX:hover{color:#FFFFFF}
+.gmHead{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:18px;flex-wrap:wrap;padding-right:28px}
+.gmTag{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10.5px;letter-spacing:.13em;color:#EF9F27}
+.gmStp{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10.5px;letter-spacing:.1em;color:#C7DDF3}
+.gmSnd{background:none;border:1px solid #2A6DB0;color:#C7DDF3;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;
+  letter-spacing:.1em;padding:6px 10px;border-radius:2px;cursor:pointer}
+.gmQ{font-size:clamp(21px,2.6vw,25px);line-height:1.28;font-weight:600;color:#FFFFFF;margin:0 0 12px}
+.gmP{font-size:16px;line-height:1.6;color:#F0F6FC;margin:0 0 16px}
+.gmS{font-size:15px;line-height:1.6;color:#C7DDF3;margin:0 0 16px}
+.gmIn,.gmTa,.gmSel{width:100%;background:#062F58;border:1px solid #2A6DB0;color:#F0F6FC;
+  padding:12px;border-radius:2px;font-size:15.5px;font-family:inherit}
+.gmTa{line-height:1.55;resize:vertical}
+.gmSel{padding:12px 8px;font-size:15px}
+.gmLbl{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10.5px;letter-spacing:.1em;color:#C7DDF3;margin-bottom:6px}
+.gmGo{background:#3DDC84;color:#04321C;border:0;padding:13px 26px;border-radius:2px;
+  font-size:15.5px;font-weight:600;cursor:pointer;margin-top:16px}
+.gmGo:disabled{opacity:.6;cursor:not-allowed}
+.gmChk{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;cursor:pointer}
+.gmChk input{margin-top:4px;flex:none;width:16px;height:16px}
+.gmChk span{font-size:13.5px;line-height:1.5;color:#F0F6FC}
+.gmChk.opt span{color:#C7DDF3}
+.gmFine{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11px;line-height:1.6;color:#C7DDF3;margin:0 0 18px}
+.gmBar{height:3px;background:#123E6B;margin-bottom:18px}
+.gmBar i{display:block;height:3px;width:0;background:#3DDC84;transition:width .35s linear}
+.gmRow{border-left:2px solid #3DDC84;padding:1px 0 1px 13px;opacity:0;transform:translateY(6px);
+  transition:opacity .35s ease,transform .35s ease}
+.gmRow.in{opacity:1;transform:none}
+.gmRow h5{font-size:15px;color:#FFFFFF;margin:0 0 2px;font-weight:600;line-height:1.3}
+.gmRow p{font-size:13.5px;color:#C7DDF3;margin:0;line-height:1.45}
+@media(prefers-reduced-motion:reduce){.gmOv,.gmBox,.gmRow{transition:none}}
 </style>
 </head>
 <body>
@@ -313,7 +361,7 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
     <p>Krio Griot<span class="mono">NAMED, NOT COUNTED</span></p>
   </div>
   <nav class="nav">
-    <a href="#break">The 1870 break</a><a href="#knowing">How I know</a><a href="#work">What I do</a><a href="#plans">Plans</a><a href="#plans" class="navcta">Start free</a><a href="#" onclick="openModal('login-modal'); return false;">Log in</a>
+    <a href="/about.html">About</a><a href="#break">The 1870 break</a><a href="#knowing">How I know</a><a href="#work">What I do</a><a href="#plans">Plans</a><a href="#plans" class="navcta">Start free</a><a href="#" onclick="openModal('login-modal'); return false;">Log in</a>
   </nav>
 </div>
 </div>
@@ -951,6 +999,7 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
     <div class="fcol">
       <h6>HELP</h6>
       <ul>
+        <li><a href="/about.html">About</a></li>
         <li><a href="/docs/getting-started.html">Getting started</a></li>
         <li><a href="/docs/documentation.html">Documentation</a></li>
         <li><a href="/docs/what-i-cannot-do.html">What I cannot do</a></li>
@@ -1255,6 +1304,113 @@ document.addEventListener('keydown',function(e){
 });
 </script>
 
+
+<!-- Griot's Mango opt-in modal -->
+<div class="gmOv" id="gmOv" role="dialog" aria-modal="true" aria-labelledby="gmT" hidden>
+<div class="gmBox">
+  <button class="gmX" id="gmX" aria-label="Close">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+  </button>
+
+  <div class="gmHead">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <svg viewBox="0 0 90 90" width="24" height="24" aria-hidden="true">
+        <path d="M52 18 C68 22 76 40 71 56 C66 72 50 80 36 75 C22 70 15 55 19 42 C23 30 33 22 44 19 C47 18 49 17 52 18 Z" fill="#EF9F27"/>
+        <path d="M44 19 C31 26 22 40 22 53 C22 64 27 71 36 75 C22 70 15 55 19 42 C23 30 33 22 44 19 Z" fill="#D85A30"/>
+        <path d="M52 18 L55 9" stroke="#3DDC84" stroke-width="5" stroke-linecap="round"/>
+        <path d="M55 11 C64 6 72 8 74 12 C67 18 58 17 55 12" fill="#3DDC84"/>
+      </svg>
+      <span class="gmTag">A GRIOT&rsquo;S MANGO</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="gmStp" id="gmStp"></span>
+      <button class="gmSnd" id="gmSnd" aria-pressed="false">SOUND ON</button>
+    </div>
+  </div>
+
+  <div id="gm0">
+    <p class="gmQ" id="gmT" style="max-width:24ch">What can&rsquo;t you answer about your family?</p>
+    <p class="gmS" style="max-width:44ch">That is where this starts. That is where it always starts. Tell me the question and I will show you where the answer might be kept.</p>
+    <button class="gmGo" id="gmBegin">Begin</button>
+  </div>
+
+  <div id="gm1" style="display:none;">
+    <p class="gmQ" style="font-size:20px;">Say it plainly. I have heard worse gaps than yours.</p>
+    <textarea id="gmAsk" class="gmTa" rows="3" placeholder="Who held my fourth great-grandmother before 1865?"></textarea>
+    <button class="gmGo" id="gmG1">Continue</button>
+  </div>
+
+  <div id="gm2" style="display:none;">
+    <p class="gmQ" style="font-size:20px;">Who is she, and where does the record put her?</p>
+    <input id="gmNm" class="gmIn" type="text" placeholder="Her name as you know it" style="margin-bottom:12px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <select id="gmSt" class="gmSel" aria-label="State">
+        <option value="">State</option>
+        <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option>
+        <option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option>
+        <option>District of Columbia</option><option>Florida</option><option>Georgia</option><option>Hawaii</option>
+        <option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option>
+        <option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option>
+        <option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option>
+        <option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option>
+        <option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option>
+        <option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option>
+        <option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option>
+        <option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option>
+        <option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option>
+        <option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option>
+        <option>I don&rsquo;t know</option><option>Outside the United States</option>
+      </select>
+      <select id="gmEr" class="gmSel" aria-label="Period">
+        <option value="">She was alive</option>
+        <option>before 1865</option>
+        <option>1865&ndash;1880</option>
+        <option>after 1880</option>
+        <option>I don&rsquo;t know</option>
+      </select>
+    </div>
+    <button class="gmGo" id="gmG2">Look for her</button>
+  </div>
+
+  <div id="gm3" style="display:none;">
+    <p class="gmQ" id="gmHd" style="font-size:20px;margin-bottom:6px;">Looking&hellip;</p>
+    <p class="gmStp" id="gmStat" style="margin:0 0 12px;">OPENING COLLECTIONS</p>
+    <div class="gmBar"><i id="gmBar"></i></div>
+    <div id="gmPlan" style="display:grid;gap:10px;margin-bottom:18px;"></div>
+    <button class="gmGo" id="gmG3" style="display:none;margin-top:0;">I want the rest</button>
+  </div>
+
+  <div id="gm4" style="display:none;">
+    <p class="gmQ" style="font-size:21px;max-width:30ch;">That is where anyone can start. I will go further.</p>
+    <p class="gmP" style="max-width:48ch;">I will read the records myself, write her life as they tell it, mark what is proven and what is missing, and find the places you can stand and the books written about her county. Free. Two to three weeks. I send the file on WhatsApp and keep your email in case I need to ask you something about your family.</p>
+    <label class="gmLbl" for="gmEm">EMAIL &middot; REQUIRED</label>
+    <input id="gmEm" class="gmIn" type="email" name="email" autocomplete="email" required aria-required="true" placeholder="you@example.com" style="margin-bottom:14px;">
+    <label class="gmLbl" for="gmPh">WHATSAPP NUMBER &middot; REQUIRED</label>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <select id="gmCc" class="gmSel" aria-label="Country code" style="width:auto;">
+        <option>+1</option><option>+232</option><option>+44</option><option>+233</option><option>+234</option>
+      </select>
+      <input id="gmPh" class="gmIn" type="tel" name="phone" inputmode="tel" autocomplete="tel-national" required aria-required="true" placeholder="555 014 8827" style="flex:1;min-width:0;">
+    </div>
+    <label class="gmChk"><input id="gmC1" type="checkbox"><span>Send my Mango to this number on WhatsApp.</span></label>
+    <label class="gmChk opt" style="margin-bottom:14px;"><input id="gmC2" type="checkbox"><span>Add me to Roots Reclaimed, where Aisha answers questions every week. About two messages a week. Reply STOP to leave. Optional &mdash; you get your Mango either way.</span></label>
+    <p class="gmFine">I use your email only if I have a question about your family. No newsletters. No spam. I do not sell either one.</p>
+    <button class="gmGo" id="gmG4" style="margin-top:0;">Send it to me</button>
+  </div>
+
+  <div id="gm5" style="display:none;">
+    <p class="gmStp" style="color:#3DDC84;margin:0 0 12px;">RECEIVED &middot; THE FILE IS OPEN</p>
+    <p class="gmQ" style="max-width:26ch;">Your question is in my hands.</p>
+    <p class="gmP">Your record list is already on its way. Start tonight if you want to.</p>
+    <p class="gmS">If I cannot get past the wall in your family, I will say so and show you exactly where it stands. A documented silence is not a failure. It is testimony.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-s" id="gmDone" style="cursor:pointer;background:none;font-family:inherit;">Back to the page</button>
+    </div>
+  </div>
+
+</div>
+</div>
+<script src="/mango-optin.js"></script>
 
 <!-- Scroll to top -->
 <button id="back-top" aria-label="Back to top"

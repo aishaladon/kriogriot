@@ -353,6 +353,49 @@ async function saveAncestor(userId, fields) {
   return createPerson(userId, fields);
 }
 
+// ── Mango helpers ──────────────────────────────────────────────────────────────
+async function mangoInsert(fields) {
+  const [result] = await pool().execute(
+    `INSERT INTO mango_requests
+     (question,ancestor_name,state,era,email,phone_cc,phone,
+      consent_delivery,consent_community,consent_text,consent_at,ip,user_agent)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [fields.question,fields.ancestor_name,fields.state,fields.era,
+     fields.email,fields.phone_cc,fields.phone,
+     fields.consent_delivery,fields.consent_community,
+     fields.consent_text,fields.consent_at,fields.ip,fields.user_agent]
+  );
+  return result.insertId;
+}
+
+async function mangoUpdate(id, fields) {
+  await pool().execute(
+    `UPDATE mango_requests SET question=?,ancestor_name=?,state=?,era=?,phone_cc=?,phone=?,
+     consent_delivery=?,consent_community=?,consent_text=?,consent_at=?,ip=?,user_agent=?,status='new'
+     WHERE id=?`,
+    [fields.question,fields.ancestor_name,fields.state,fields.era,
+     fields.phone_cc,fields.phone,fields.consent_delivery,fields.consent_community,
+     fields.consent_text,fields.consent_at,fields.ip,fields.user_agent,id]
+  );
+}
+
+async function mangoFindByEmail(email) {
+  return q('SELECT id FROM mango_requests WHERE email = ?', [email]);
+}
+
+async function mangoSetStatus(id, status) {
+  await pool().execute('UPDATE mango_requests SET status=? WHERE id=?', [status, id]);
+}
+
+async function mangoList({ status, q: search } = {}) {
+  let sql = 'SELECT * FROM mango_requests WHERE 1=1';
+  const params = [];
+  if (status) { sql += ' AND status=?'; params.push(status); }
+  if (search) { sql += ' AND (ancestor_name LIKE ? OR email LIKE ?)'; params.push('%'+search+'%','%'+search+'%'); }
+  sql += ' ORDER BY created_at DESC LIMIT 500';
+  return q(sql, params);
+}
+
 module.exports = {
   createUser, getUserByEmail, getUserById, updateUserPassword,
   storeResetToken, getResetToken, clearResetToken,
@@ -371,4 +414,5 @@ module.exports = {
   saveAncestor,
   deleteRecord: (table, id, userId) => deletePerson(userId, id),
   mergeAncestors: async () => ({}),
+  mangoInsert, mangoUpdate, mangoFindByEmail, mangoSetStatus, mangoList,
 };

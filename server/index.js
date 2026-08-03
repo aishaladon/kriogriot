@@ -217,6 +217,107 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, anthropicKey: !!process.env.ANTHROPIC_API_KEY });
 });
 
+// ── Mango opt-in (public) ──────────────────────────────────────────────────────
+
+const RECORD_AVAIL = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'data/record-availability.json'), 'utf8')
+);
+
+function getRecordMatches(state, era) {
+  const stateDef = RECORD_AVAIL.states[state];
+  if (!stateDef) return { items: RECORD_AVAIL.fallbackItems.slice(0, 8), fallback: true };
+  const stateTags = new Set(stateDef.tags);
+  if (stateTags.has('foreign') || stateTags.has('unknown'))
+    return { items: RECORD_AVAIL.fallbackItems.slice(0, 8), fallback: true };
+
+  const order = { documented: 0, absent: 1, inferred: 2 };
+  const all = Object.values(RECORD_AVAIL.recordSets)
+    .filter(rs => rs.tags.some(t => stateTags.has(t)) && (!era || rs.eras.includes(era)))
+    .sort((a, b) => (order[a.grade] ?? 3) - (order[b.grade] ?? 3));
+
+  const items = all.slice(0, 8).map(rs => ({ label: rs.label, note: rs.note, grade: rs.grade }));
+  if (!items.length) return { items: RECORD_AVAIL.fallbackItems.slice(0, 8), fallback: true };
+  return { items, fallback: false };
+}
+
+app.get('/api/record-availability', (req, res) => {
+  res.json(getRecordMatches(req.query.state, req.query.era));
+});
+
+const _mangoRateMap = new Map();
+function mangoRateOk(ip) {
+  const now = Date.now(), window = 60 * 60 * 1000;
+  const hits = (_mangoRateMap.get(ip) || []).filter(t => now - t < window);
+  if (hits.length >= 5) return false;
+  hits.push(now); _mangoRateMap.set(ip, hits); return true;
+}
+
+const MANGO_CONSENT_TEXT =
+  'Send my Mango report to this number on WhatsApp. I understand my email may be used to follow up about my family research. No newsletters. No spam.';
+
+app.post('/api/mango', async (req, res) => {
+  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const ua = (req.headers['user-agent'] || '').slice(0, 255);
+  const { question, ancestor_name, state, era, email, phone_cc, phone,
+          consent_delivery, consent_community, website } = req.body || {};
+
+  if (website) return res.json({ ok: true }); // honeypot
+  if (!mangoRateOk(ip)) return res.status(429).json({ error: 'Too many requests. Try again later.' });
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 200)
+    return res.status(400).json({ error: 'A valid email address is required.' });
+  if (!phone || (phone || '').replace(/\D/g, '').length < 7 || (phone || '').length > 40)
+    return res.status(400).json({ error: 'A valid phone number is required.' });
+  if (!consent_delivery)
+    return res.status(400).json({ error: 'Consent to delivery is required.' });
+  if (state && !RECORD_AVAIL.states[state])
+    return res.status(400).json({ error: 'Invalid state.' });
+
+  const clean = s => (s || '').trim().slice(0, 2000);
+  const qTrim  = clean(question);
+  const nmTrim = (ancestor_name || '').trim().slice(0, 200);
+  const stTrim = (state || '').trim().slice(0, 60);
+  const erTrim = (era   || '').trim().slice(0, 40);
+  const ccTrim = (phone_cc || '+1').trim().slice(0, 8);
+  const consentAt = new Date().toISOString().replace('T', ' ').replace(/\..+/, '');
+
+  try {
+    const existing = await db.mangoFindByEmail(email);
+    const fields = {
+      question: qTrim, ancestor_name: nmTrim, state: stTrim, era: erTrim,
+      phone_cc: ccTrim, phone, consent_delivery: consent_delivery ? 1 : 0,
+      consent_community: consent_community ? 1 : 0,
+      consent_text: MANGO_CONSENT_TEXT, consent_at: consentAt, ip, user_agent: ua,
+    };
+    let rowId;
+    if (existing.length) { rowId = existing[0].id; await db.mangoUpdate(rowId, fields); }
+    else { rowId = await db.mangoInsert({ ...fields, email }); }
+
+    const notifyTo = process.env.NOTIFY_TO || 'emailme@aishaladon.com';
+    const subject = `Mango request — ${nmTrim || 'no name given'} · ${stTrim || 'unknown state'}`;
+    const body = `${qTrim || '(no question entered)'}
+
+ANCESTOR   ${nmTrim || '(none)'}
+PLACE      ${stTrim || '(none)'}
+ERA        ${erTrim || '(none)'}
+
+EMAIL      ${email}
+WHATSAPP   ${ccTrim}${phone}
+
+Community opt-in: ${consent_community ? 'yes' : 'no'}
+Submitted:        ${consentAt}
+Request #${rowId}`;
+
+    sendEmail({ to: notifyTo, subject, html: `<pre style="font-family:monospace;font-size:14px;">${body}</pre>` })
+      .catch(err => console.error('Mango notify email failed:', err.message));
+
+    res.json({ ok: true, id: rowId });
+  } catch (err) {
+    console.error('Mango POST error:', err.message);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
+  }
+});
+
 // ── All routes below require auth ──────────────────────────────────────────────
 app.use('/api', requireAuth);
 
@@ -499,6 +600,28 @@ app.delete('/api/family-tree/connect/:childId', async (req, res) => {
 app.post('/api/family-tree/reload', (req, res) => {
   _gedcomCache = null;
   res.json({ ok: true, gedcomLoaded: false });
+});
+
+// ── Mango admin ───────────────────────────────────────────────────────────────
+app.patch('/api/mango/:id', async (req, res) => {
+  const { status } = req.body || {};
+  const allowed = ['new','researching','sent','no reply'];
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
+  try {
+    await db.mangoSetStatus(req.params.id, status);
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/mango', requireAuth, async (req, res) => {
+  try {
+    const rows = await db.mangoList({ status: req.query.status, q: req.query.q });
+    res.json({ ok: true, rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/admin/mango', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/admin-mango.html'));
 });
 
 // ── Pages ──────────────────────────────────────────────────────────────────────
