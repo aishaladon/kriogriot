@@ -65,32 +65,43 @@ app.use(express.static(path.join(__dirname, '../client'), { index: false }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // ── Email helper ───────────────────────────────────────────────────────────────
-function getMailer() {
+async function sendEmail({ to, subject, html }) {
+  if (!process.env.SMTP_USER) return; // email not configured, skip silently
+
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+
+  // Use Resend HTTP API when configured — gives clearer errors than SMTP
+  if (process.env.SMTP_HOST === 'smtp.resend.com') {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.SMTP_PASS}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from, to: [to], subject, html }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const msg = body.message || body.error || `Resend API error ${res.status}`;
+      console.error('Resend send error:', msg);
+      throw new Error(msg);
+    }
+    return;
+  }
+
+  // Fall back to nodemailer for other SMTP providers
   const nodemailer = require('nodemailer');
-  return nodemailer.createTransport({
+  const mailer = nodemailer.createTransport({
     host:   process.env.SMTP_HOST || 'smtp.hostinger.com',
     port:   Number(process.env.SMTP_PORT || 587),
     secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
-}
-
-async function sendEmail({ to, subject, html }) {
-  if (!process.env.SMTP_USER) return; // email not configured, skip silently
-  const mailer = getMailer();
   try {
-    await mailer.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to,
-      subject,
-      html,
-    });
+    await mailer.sendMail({ from, to, subject, html });
   } catch (err) {
     console.error('Email send error:', err.message);
-    throw err; // re-throw so callers know it failed
+    throw err;
   }
 }
 
@@ -211,6 +222,16 @@ app.get('/smtp-test', async (req, res) => {
   if (!process.env.SMTP_USER) return res.json({ ok: false, cfg, error: 'SMTP_USER not set' });
 
   try {
+    if (process.env.SMTP_HOST === 'smtp.resend.com') {
+      // For Resend, test the HTTP API directly — SMTP verify() passes even when domain is unverified
+      const testRes = await fetch('https://api.resend.com/domains', {
+        headers: { 'Authorization': `Bearer ${process.env.SMTP_PASS}` },
+      });
+      const data = await testRes.json().catch(() => ({}));
+      if (!testRes.ok) throw new Error(data.message || `Resend API error ${testRes.status}`);
+      const domains = (data.data || []).map(d => `${d.name} (${d.status})`);
+      return res.json({ ok: true, cfg, message: 'Resend API key valid.', domains });
+    }
     const nodemailer = require('nodemailer');
     const transport = nodemailer.createTransport({
       host:   process.env.SMTP_HOST || 'smtp.hostinger.com',
