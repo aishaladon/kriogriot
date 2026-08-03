@@ -194,7 +194,7 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
 app.post('/api/auth/logout', (req, res) => res.json({ ok: true }));
 
 // ── SMTP diagnostic (admin-only, remove after confirming email works) ──────────
-app.get('/api/admin/smtp-test', async (req, res) => {
+app.get('/smtp-test', async (req, res) => {
   const adminKey = process.env.ADMIN_KEY;
   if (!adminKey || req.headers['x-admin-key'] !== adminKey)
     return res.status(403).json({ error: 'Forbidden' });
