@@ -374,7 +374,7 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
     <p>Krio Griot<span class="mono">NAMED, NOT COUNTED</span></p>
   </div>
   <nav class="nav" id="main-nav">
-    <a href="/about.html">About</a><a href="#break">The 1870 break</a><a href="#knowing">How I know</a><a href="#work">What I do</a><a href="#plans">Plans</a><a href="#plans" class="navcta">Start free</a><a href="#" onclick="openModal('login-modal'); return false;" id="loginLink">Log in</a>
+    <a href="/about.html">About</a><a href="#break">The 1870 break</a><a href="#knowing">How I know</a><a href="#work">What I do</a><a href="#plans">Plans</a><a href="#" onclick="openModal('login-modal'); return false;" id="loginLink">Log in</a>
   </nav>
   <button class="ham-btn" id="ham-btn" aria-label="Open menu" aria-expanded="false"
     onclick="var d=document.getElementById('ham-drawer'),o=d.classList.toggle('open');this.setAttribute('aria-expanded',o)">
@@ -386,7 +386,7 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
     <a href="#knowing" onclick="document.getElementById('ham-drawer').classList.remove('open')">How I know</a>
     <a href="#work" onclick="document.getElementById('ham-drawer').classList.remove('open')">What I do</a>
     <a href="#plans" onclick="document.getElementById('ham-drawer').classList.remove('open')">Plans</a>
-    <a href="#plans" class="navcta" onclick="document.getElementById('ham-drawer').classList.remove('open')">Start free</a>
+    <a href="#" onclick="document.getElementById('ham-drawer').classList.remove('open');openModal('login-modal');return false;">Log in</a>
     <a href="#" onclick="document.getElementById('ham-drawer').classList.remove('open');openModal('login-modal');return false;">Log in</a>
   </div>
 </div>
@@ -1122,7 +1122,8 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
       <div class="form-group"><label>Email Address</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/></div>
       <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="Your password" autocomplete="current-password"/></div>
       <button class="auth-submit-btn" onclick="handleLogin()">Log In to Krio Griot</button>
-      <div class="auth-switch">Don't have an account? <button onclick="switchModal('login-modal','signup-modal')">Create one free</button></div>
+      <div id="login-forgot-box" style="display:none;margin-top:12px;background:rgba(61,220,132,.1);border:1px solid #3DDC84;border-radius:6px;padding:12px;font-size:.82rem;color:#3DDC84;word-break:break-all;"></div>
+      <div class="auth-switch" style="margin-top:14px;"><button onclick="handleLandingForgot()" style="color:#EF9F27;background:none;border:none;cursor:pointer;font-size:.88rem;text-decoration:underline;">Forgot your password?</button></div>
     </div>
   </div>
 </div>
@@ -1243,6 +1244,28 @@ function fmtCard(inp){var v=inp.value.replace(/\D/g,'').substring(0,16);inp.valu
 function fmtExp(inp){var v=inp.value.replace(/\D/g,'').substring(0,4);if(v.length>=3)v=v.substring(0,2)+' / '+v.substring(2);inp.value=v}
 
 // Login (real API)
+async function handleLandingForgot(){
+  var email=document.getElementById('login-email').value.trim();
+  var box=document.getElementById('login-forgot-box');
+  var alertEl=document.getElementById('login-alert');
+  if(!email){ if(alertEl){alertEl.textContent='Enter your email above first.';alertEl.style.display='block';} return; }
+  box.style.display='none';
+  try{
+    var r=await fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
+    var d=await r.json();
+    if(d.resetUrl){
+      box.innerHTML='Email not configured yet. Copy this link to reset your password:<br><br><a href="'+d.resetUrl+'" style="color:#3DDC84;">'+d.resetUrl+'</a>';
+      box.style.display='block';
+    } else {
+      box.innerHTML='Reset link sent — check your inbox.';
+      box.style.display='block';
+    }
+  }catch(e){
+    box.innerHTML='Could not send reset link. Please try again.';
+    box.style.display='block';
+  }
+}
+
 async function handleLogin(){
   var email=document.getElementById('login-email').value.trim();
   var pass=document.getElementById('login-password').value;
