@@ -57,10 +57,17 @@
     .error   { color: #e57373; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
     .success { color: #81c784; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
     .forgot-link {
-      display: block; text-align: right; font-size: 0.82rem;
-      color: #888; text-decoration: none; margin-top: -0.5rem; margin-bottom: 1rem;
+      display: block; text-align: center; font-size: 0.88rem;
+      color: #c8a96e; text-decoration: none; margin-top: 0.75rem;
+      padding: 6px; border-radius: 6px;
     }
-    .forgot-link:hover { color: #c8a96e; }
+    .forgot-link:hover { text-decoration: underline; }
+    .reset-url-box {
+      background: #111; border: 1px solid #3DDC84; border-radius: 8px;
+      padding: 14px; font-size: .8rem; color: #3DDC84; word-break: break-all;
+      margin-top: 1rem; display: none;
+    }
+    .reset-url-box a { color: #3DDC84; }
     .view { display: none; }
     .view.active { display: block; }
     .back-link {
@@ -91,8 +98,8 @@
       <input type="email" id="login-email" placeholder="you@example.com" required />
       <label>Password</label>
       <input type="password" id="login-password" placeholder="••••••••" required />
-      <a class="forgot-link" href="#" onclick="showView('forgot'); return false;">Forgot password?</a>
       <button class="btn" type="submit" id="btn-login">Sign In</button>
+      <a class="forgot-link" href="#" onclick="showView('forgot'); return false;">Forgot your password?</a>
     </form>
     <p style="text-align:center;font-size:.8rem;color:#555;margin-top:1.2rem;">Krio Griot is currently in private beta.</p>
   </div>
@@ -111,6 +118,7 @@
       <input type="email" id="forgot-email" placeholder="you@example.com" required />
       <button class="btn" type="submit" id="btn-forgot">Send Reset Link</button>
     </form>
+    <div id="reset-url-box" class="reset-url-box"></div>
   </div>
 
   <!-- ── Reset password ── -->
@@ -208,6 +216,7 @@ async function doRegister(e) {
 async function doForgot(e) {
   e.preventDefault();
   clearMessages();
+  document.getElementById('reset-url-box').style.display = 'none';
   const btn = document.getElementById('btn-forgot');
   btn.disabled = true; btn.textContent = 'Sending…';
   try {
@@ -218,7 +227,14 @@ async function doForgot(e) {
     });
     const data = await res.json();
     if (!res.ok) { showError('forgot-error', data.error || 'Something went wrong.'); return; }
-    showSuccess('forgot-success', 'If an account exists for that email, a reset link has been sent. Check your inbox.');
+    if (data.resetUrl) {
+      // Email not configured — show the link directly on screen
+      const box = document.getElementById('reset-url-box');
+      box.innerHTML = '⚠ Email not configured. Copy this link to reset your password:<br><br><a href="' + data.resetUrl + '">' + data.resetUrl + '</a>';
+      box.style.display = 'block';
+    } else {
+      showSuccess('forgot-success', 'Reset link sent — check your inbox.');
+    }
   } catch (err) {
     showError('forgot-error', 'Network error. Please try again.');
   } finally {

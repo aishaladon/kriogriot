@@ -176,6 +176,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await db.storeResetToken(user.id, token, expires);
     const appUrl   = process.env.APP_URL || 'https://kriogriot.com';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+    // If SMTP is not configured, return the reset URL directly (admin/dev fallback)
+    if (!process.env.SMTP_USER) {
+      console.warn('SMTP not configured — returning reset URL in response (dev/admin fallback)');
+      return res.json({ ok: true, resetUrl, notice: 'Email not configured. Use the resetUrl directly.' });
+    }
+
     await sendEmail({
       to: user.email,
       subject: 'Krio Griot — Reset Your Password',
