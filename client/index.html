@@ -91,11 +91,8 @@
         Upgrade Plan
       </button>
       <div class="pp-divider"></div>
-      <button class="pp-item" onclick="closeProfileMenu(); openAppBugReport();">
-        Report a Bug
-      </button>
       <button class="pp-item" onclick="closeProfileMenu(); showPage('help-page');">
-        Get Help
+        Get Help &amp; Support
       </button>
       <div class="pp-divider"></div>
       <button class="pp-item pp-logout" onclick="handleAppLogout()">
@@ -1024,12 +1021,89 @@
   <section class="page" id="page-help-page">
     <div class="page-header">
       <div>
-        <h2>Get Help</h2>
-        <div class="page-subtitle">Resources and support for Legacy Research</div>
+        <h2>Get Help &amp; Support</h2>
+        <div class="page-subtitle">Answers to common questions, plus a way to reach us directly</div>
       </div>
     </div>
     <div style="max-width:640px;display:flex;flex-direction:column;gap:16px;">
 
+      <!-- Contact card -->
+      <div class="settings-card" style="border-left:3px solid var(--accent);">
+        <div class="settings-card-header">
+          <span class="settings-card-icon">✉</span>
+          <div>
+            <div class="settings-card-title">Contact Support</div>
+            <div class="settings-card-sub">Questions, bugs, or feedback — we read every message</div>
+          </div>
+        </div>
+        <p style="font-size:.88rem;color:var(--muted);line-height:1.7;margin:8px 0 14px;">
+          Email us at <a href="mailto:support@kriogriot.com" style="color:var(--green);font-weight:600;">support@kriogriot.com</a>.
+          Or use the form below and it will open your email client pre-filled.
+        </p>
+        <div id="help-bug-alert"></div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>What were you trying to do?</label>
+          <input id="help-bug-action" type="text" placeholder="e.g. Save an ancestor, run a search…" />
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>What happened? (describe the issue)</label>
+          <textarea id="help-bug-desc" rows="4"
+            style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;color:var(--text);font-size:.88rem;font-family:var(--font);width:100%;resize:vertical;outline:none;"
+            placeholder="Include any error messages you saw, and which browser/device you're using…"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitHelpBug()">Open Email to Support</button>
+      </div>
+
+      <!-- FAQ -->
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <span class="settings-card-icon">?</span>
+          <div>
+            <div class="settings-card-title">Frequently Asked Questions</div>
+            <div class="settings-card-sub">Common questions and problems</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0;margin-top:8px;">
+
+          <details class="faq-item">
+            <summary class="faq-q">The AI research agent gave me incorrect information. What should I do?</summary>
+            <p class="faq-a">The AI generates hypotheses based on available evidence — it is sometimes wrong. Treat every AI suggestion as a lead to verify, not a conclusion. Check the source it cites directly. If you find a consistent error pattern, email support@kriogriot.com so we can improve the prompts.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">I uploaded a document but the Archive Scanner didn't extract the right information.</summary>
+            <p class="faq-a">The scanner works best on clear, high-contrast scans. If the image is blurry, handwritten in a difficult script, or very faded, accuracy drops. Try re-scanning at a higher resolution (300 dpi or higher). You can always manually correct any field before saving to your records.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">My DNA match data isn't importing correctly.</summary>
+            <p class="faq-a">Export your matches as a CSV from AncestryDNA, 23andMe, FamilyTreeDNA, or MyHeritage — make sure you're downloading the full match list, not a filtered view. If the columns don't map correctly on import, email the CSV to support@kriogriot.com and we'll take a look.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">I can't find a record set I know exists. Is it in Krio Griot?</summary>
+            <p class="faq-a">Krio Griot guides you to records and helps you build search strategies — it does not have direct access to paywalled archives like Ancestry, Fold3, or Newspapers.com. See the <a href="/docs/what-i-cannot-do.html" target="_blank" style="color:var(--green);">What I Cannot Do</a> page for a full list of limitations and what we can suggest instead.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">The page loaded but my data isn't showing up.</summary>
+            <p class="faq-a">Try a hard refresh (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows). If data is still missing, sign out and sign back in — this clears the local session and fetches fresh data. If the problem persists, contact support.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">How do I delete my account or download all my data?</summary>
+            <p class="faq-a">Email support@kriogriot.com with your account email address. We'll send you a full data export within 48 hours and delete your account upon request. We do not retain research data after deletion.</p>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">I'm being charged but I thought I was on the free plan.</summary>
+            <p class="faq-a">Email support@kriogriot.com with your account email and we'll look into it immediately. Include the last four digits of the card charged if you have them. We will resolve any billing errors within one business day.</p>
+          </details>
+
+        </div>
+      </div>
+
+      <!-- Quick start -->
       <div class="settings-card">
         <div class="settings-card-header">
           <span class="settings-card-icon"></span>
@@ -1039,55 +1113,29 @@
           </div>
         </div>
         <ol style="font-size:.88rem;color:var(--muted);line-height:2;padding-left:18px;margin-top:6px;">
-          <li><strong style="color:var(--text);">AI Research Agent</strong> — Enter an ancestor's name, birth year, and location. The AI will search 100+ databases and return sources with citations.</li>
-          <li><strong style="color:var(--text);">Save Findings</strong> — After a research session, click "Save to Database" to store sources, questions, and ancestor records automatically.</li>
-          <li><strong style="color:var(--text);">Ancestors</strong> — Build profiles for each person in your tree. Link them to sources, DNA tests, and research questions.</li>
-          <li><strong style="color:var(--text);">Archive Scanner</strong> — Upload a scanned photograph or document. The AI reads it and generates archival metadata automatically.</li>
+          <li><strong style="color:var(--text);">AI Research Agent</strong> — Enter an ancestor's name, birth year, and location. The AI returns sources with citations.</li>
+          <li><strong style="color:var(--text);">Save Findings</strong> — After a research session, click "Save to Database" to store sources and ancestor records.</li>
+          <li><strong style="color:var(--text);">People</strong> — Build profiles for each person in your tree. Link them to sources, DNA tests, and research questions.</li>
+          <li><strong style="color:var(--text);">Archive Scanner</strong> — Upload a scanned photograph or document. The AI reads it and generates archival metadata.</li>
           <li><strong style="color:var(--text);">Research Log</strong> — Every AI research session is logged here automatically. Track what has been searched and what's still open.</li>
         </ol>
       </div>
 
-      <div class="settings-card">
-        <div class="settings-card-header">
-          <span class="settings-card-icon"></span>
-          <div>
-            <div class="settings-card-title">Tips for Better AI Research Results</div>
-            <div class="settings-card-sub">How to get the most from the research agent</div>
-          </div>
-        </div>
-        <ul style="font-size:.88rem;color:var(--muted);line-height:2;padding-left:18px;margin-top:6px;">
-          <li>Include a birth year range (e.g. "born 1845–1860") when exact dates are unknown.</li>
-          <li>Add family members' names to narrow results — "wife of Elias Perrin" will filter effectively.</li>
-          <li>Use the location filter to focus on specific states or African regions.</li>
-          <li>After results arrive, use the follow-up chat to ask specific questions about sources found.</li>
-          <li>Select specific database categories (Freedmen's Bureau, DNA, Military) to focus the search.</li>
-        </ul>
-      </div>
-
-      <div class="settings-card">
-        <div class="settings-card-header">
-          <span class="settings-card-icon"></span>
-          <div>
-            <div class="settings-card-title">Report a Problem</div>
-            <div class="settings-card-sub">Something not working right? Let us know.</div>
-          </div>
-        </div>
-        <div id="help-bug-alert"></div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label>What were you trying to do?</label>
-          <input id="help-bug-action" type="text" placeholder="e.g. Save an ancestor, run a search…" />
-        </div>
-        <div class="form-group" style="margin-bottom:20px;">
-          <label>What happened?</label>
-          <textarea id="help-bug-desc" rows="4"
-            style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;color:var(--text);font-size:.88rem;font-family:var(--font);width:100%;resize:vertical;outline:none;"
-            placeholder="Describe the issue…"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="submitHelpBug()">Submit Report</button>
-      </div>
-
     </div>
   </section>
+
+  <!-- ── Sign-out confirm modal ─────────────────────────────────────────── -->
+  <div id="signout-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(4,34,63,.72);align-items:center;justify-content:center;">
+    <div style="background:#062F58;border:1px solid rgba(160,200,240,.22);border-radius:6px;padding:32px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.45);">
+      <div style="font-size:2rem;margin-bottom:12px;">←</div>
+      <h3 style="font-size:1.1rem;font-weight:700;color:#F0F6FC;margin:0 0 8px;">Sign out?</h3>
+      <p style="font-size:.88rem;color:rgba(192,220,248,.7);margin:0 0 24px;line-height:1.6;">Your research is saved. You'll need to sign back in to continue.</p>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-secondary" style="min-width:100px;" onclick="closeSignoutModal()">Cancel</button>
+        <button class="btn btn-primary" style="min-width:100px;" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Global footer -->
   <footer id="app-footer">

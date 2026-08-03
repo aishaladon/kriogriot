@@ -3574,27 +3574,31 @@ function processUpgrade() {
   setTimeout(() => loadUpgradePlan(), 300);
 }
 
-// ── Bug report from app (help page) ──────────────────────────────────────────
+// ── Help / bug report ─────────────────────────────────────────────────────────
 function openAppBugReport() { showPage('help-page'); }
 function submitHelpBug() {
   const action  = document.getElementById('help-bug-action')?.value.trim();
   const desc    = document.getElementById('help-bug-desc')?.value.trim();
   const alertEl = document.getElementById('help-bug-alert');
   if (!action || !desc) {
-    if (alertEl) alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:14px;">Please describe the issue before submitting.</div>`;
+    if (alertEl) alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:14px;">Please fill in both fields before submitting.</div>`;
     return;
   }
-  if (alertEl) alertEl.innerHTML = `<div class="alert alert-success" style="margin-bottom:14px;">Bug report submitted — thank you!</div>`;
-  if (document.getElementById('help-bug-action')) document.getElementById('help-bug-action').value = '';
-  if (document.getElementById('help-bug-desc')) document.getElementById('help-bug-desc').value = '';
+  const subject = encodeURIComponent('Krio Griot Support: ' + action.slice(0, 80));
+  const body    = encodeURIComponent('What I was trying to do:\n' + action + '\n\nWhat happened:\n' + desc + '\n\nBrowser/device: ' + navigator.userAgent.slice(0, 120));
+  window.location.href = 'mailto:support@kriogriot.com?subject=' + subject + '&body=' + body;
+  if (alertEl) alertEl.innerHTML = `<div class="alert alert-success" style="margin-bottom:14px;">Opening your email client…</div>`;
 }
 
-// ── Logout ─────────────────────────────────────────────────────────────────────
+// ── Sign-out modal ────────────────────────────────────────────────────────────
 function handleAppLogout() {
   closeProfileMenu();
-  if (confirm('Sign out of Krio Griot?')) {
-    logout();
-  }
+  const m = document.getElementById('signout-modal');
+  if (m) { m.style.display = 'flex'; }
+}
+function closeSignoutModal() {
+  const m = document.getElementById('signout-modal');
+  if (m) m.style.display = 'none';
 }
 
 // ── Compat: old saveProfile kept for safety ───────────────────────────────────
@@ -3636,6 +3640,18 @@ function escHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+// ── Sign-out modal backdrop + Escape ─────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const m = document.getElementById('signout-modal');
+    if (m && m.style.display === 'flex') { closeSignoutModal(); return; }
+  }
+});
+document.addEventListener('click', function(e) {
+  const m = document.getElementById('signout-modal');
+  if (m && m.style.display === 'flex' && e.target === m) closeSignoutModal();
+});
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 loadDashboard();
