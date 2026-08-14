@@ -9,29 +9,7 @@ jobs:
     name: Deploy to Hostinger via SSH
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create deployment zip
-        run: |
-          zip -r deploy.zip . \
-            --exclude "*.git*" \
-            --exclude "*node_modules*" \
-            --exclude ".env" \
-            --exclude ".env.example" \
-            --exclude "deploy.zip"
-
-      - name: Upload zip via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          username: ${{ secrets.HOSTINGER_SSH_USERNAME }}
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: 65002
-          source: deploy.zip
-          target: /home/${{ secrets.HOSTINGER_SSH_USERNAME }}/domains/kriogriot.com/
-
-      - name: Extract and restart via SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
@@ -39,13 +17,8 @@ jobs:
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           port: 65002
           script: |
-            cd ~/domains/kriogriot.com
-            unzip -o deploy.zip -d kriogriot_new
-            rsync -a --exclude='.env' kriogriot_new/ nodejs/
-            rm -rf kriogriot_new deploy.zip
-            cd nodejs
-            NODE_PATH=$(find /usr/local/lib /usr/lib -name "node" -type f 2>/dev/null | head -1 || which node 2>/dev/null || echo "node")
-            NPM_PATH=$(find /usr/local/lib /usr/bin -name "npm" -type f 2>/dev/null | head -1 || which npm 2>/dev/null || echo "npm")
-            $NPM_PATH install --omit=dev --prefix ~/domains/kriogriot.com/nodejs 2>/dev/null || true
-            pkill -f "server/index.js" 2>/dev/null || true
-            sleep 2
+            cd ~/domains/kriogriot.com/kriogriot
+            git pull origin main
+            cp -r client/* ../nodejs/client/
+            cp -r server/* ../nodejs/server/
+            cp package.json ../nodejs/package.json
