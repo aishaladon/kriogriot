@@ -1,0 +1,29 @@
+name: Continuous Auto-Update to Hostinger
+
+on:
+  push:
+    branches:
+      - main  # Triggers the sync every time you commit code to the main branch
+
+jobs:
+  web-deploy:
+    name: 🎉 Sync to Live Server
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Fetch Repository Code
+      uses: actions/checkout@v4
+    
+    - name: 🚀 Sync Files to Target Folder
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+        username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+        password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+        # Targets the custom folder where your live code actually lives:
+        server-dir: ./kriogriot/
+        # Prevents overwriting local node packages or configuration files on the server:
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .env
