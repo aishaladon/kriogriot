@@ -2,15 +2,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0f0f0f;
-  --surface:   #1a1a1a;
-  --surface2:  #242424;
-  --border:    #2e2e2e;
-  --accent:    #c9a84c;      /* warm gold */
-  --accent2:   #8b6914;
-  --text:      #e8e3d9;
-  --muted:     #888;
-  --success:   #4caf7d;
+  --bg:        #04223F;      /* --deep */
+  --surface:   #062F58;      /* --harbour */
+  --surface2:  #083568;
+  --border:    rgba(160,200,240,.22);
+  --accent:    #EF9F27;      /* --mango */
+  --accent2:   #c98020;
+  --green:     #3DDC84;
+  --text:      #F0F6FC;      /* --body */
+  --muted:     #C7DDF3;      /* --pale */
+  --muted2:    rgba(199,221,243,.55);
+  --success:   #3DDC84;
   --danger:    #e05555;
   --sidebar-w: 220px;
   --radius:    10px;
@@ -1890,3 +1892,41 @@ td[data-field]:not(.cell-editing):hover {
 .person-link-chip:hover {
   border-bottom-color: var(--accent);
 }
+
+/* ── FAQ accordion ────────────────────────────────────────────────────────── */
+.faq-item {
+  border-top: 1px solid var(--border);
+  padding: 0;
+}
+.faq-item:last-child { border-bottom: 1px solid var(--border); }
+.faq-q {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  padding: 13px 4px;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.faq-q::-webkit-details-marker { display: none; }
+.faq-q::before {
+  content: '+';
+  font-size: 1.1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+  transition: transform .18s;
+}
+details[open] .faq-q::before { content: '−'; }
+.faq-a {
+  font-size: .85rem;
+  color: var(--muted);
+  line-height: 1.7;
+  padding: 0 4px 14px 24px;
+  margin: 0;
+}
+.faq-a a { color: var(--green); }

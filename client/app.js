@@ -1,4 +1,3 @@
-// ── State ─────────────────────────────────────────────────────────────────────
 const state = {
   chatHistory:        [],
   currentResearch:    '',
@@ -199,12 +198,46 @@ function goBack() {
   showPage(state.previousPage || 'ancestors');
 }
 
+// ── Auth ───────────────────────────────────────────────────────────────────────
+function getToken() { return localStorage.getItem('kg_token'); }
+
+function logout() {
+  localStorage.removeItem('kg_token');
+  localStorage.removeItem('kg_user');
+  window.location.href = '/login';
+}
+
+// Guard: redirect to login if no token
+(function checkAuth() {
+  if (!getToken()) window.location.href = '/login';
+})();
+
+// Show logged-in user name in sidebar if element exists
+(function showUser() {
+  const stored = localStorage.getItem('kg_user');
+  if (!stored) return;
+  try {
+    const user = JSON.parse(stored);
+    const el = document.getElementById('sidebar-user-name');
+    if (el) el.textContent = user.name || user.email;
+  } catch (_) {}
+})();
+
 // ── API helpers ───────────────────────────────────────────────────────────────
 async function api(path, options = {}) {
+  const token = getToken();
   const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
     ...options,
   });
+  if (res.status === 401) {
+    logout();
+    return;
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
@@ -1302,7 +1335,7 @@ async function runResearch() {
   try {
     const response = await fetch('/api/research', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
       body:    JSON.stringify({ name, birthYear, location, relatives, questions,
                                selectedCategories: state.selectedCategories,
                                locationFilters:    state.selectedLocations }),
@@ -2218,7 +2251,7 @@ async function saveCurrentMetadata() {
       const blob     = base64ToBlob(state.currentImageB64, state.currentImageType);
       const formData = new FormData();
       formData.append('image', blob, `archive-${Date.now()}.${state.currentImageType.split('/')[1] || 'jpg'}`);
-      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData });
+      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData, headers: { Authorization: 'Bearer ' + getToken() } });
       if (uploadRes.ok) {
         const uploadData = await uploadRes.json();
         imageUrl = uploadData.imageUrl;
@@ -2322,7 +2355,7 @@ async function saveBulkResult(index) {
       const blob     = base64ToBlob(result.b64.replace(/^data:[^;]+;base64,/, ''), result.mimeType);
       const formData = new FormData();
       formData.append('image', blob, `archive-${Date.now()}-${index}.${result.mimeType.split('/')[1] || 'jpg'}`);
-      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData });
+      const uploadRes = await fetch('/api/upload-archive-image', { method: 'POST', body: formData, headers: { Authorization: 'Bearer ' + getToken() } });
       if (uploadRes.ok) {
         const uploadData = await uploadRes.json();
         imageUrl = uploadData.imageUrl;
@@ -2369,7 +2402,7 @@ async function handleModalImageUpload(input, fid, uploadEndpoint, urlFieldId) {
   try {
     const formData = new FormData();
     formData.append('image', file, file.name);
-    const res  = await fetch(endpoint, { method: 'POST', body: formData });
+    const res  = await fetch(endpoint, { method: 'POST', body: formData, headers: { Authorization: 'Bearer ' + getToken() } });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Upload failed');
 
@@ -3379,23 +3412,20 @@ function saveUser(u) { localStorage.setItem('lr_user', JSON.stringify(u)); }
 
 // ── Sidebar profile bootstrap ──────────────────────────────────────────────────
 function initSidebarProfile() {
-  const user = getUser();
+  let user = null;
+  try { user = JSON.parse(localStorage.getItem('kg_user') || 'null'); } catch (_) {}
   if (!user) return;
-  const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'My Profile';
+  const name = user.name || user.email || 'My Profile';
   const el = document.getElementById('sidebar-username');
   if (el) el.textContent = name;
   const planEl = document.getElementById('sidebar-plan-label');
   if (planEl) planEl.textContent = user.plan === 'researcher' ? 'Researcher Plan' : 'Basic Plan';
-  // Popup
   const ppName = document.getElementById('pp-name');
   if (ppName) ppName.textContent = name;
   const ppEmail = document.getElementById('pp-email');
   if (ppEmail) ppEmail.textContent = user.email || '';
   const ppBadge = document.getElementById('pp-plan-badge');
-  if (ppBadge) {
-    ppBadge.textContent = user.plan === 'researcher' ? 'Researcher' : 'Basic';
-    if (user.plan === 'researcher') ppBadge.classList.add('paid');
-  }
+  if (ppBadge) ppBadge.textContent = user.plan === 'researcher' ? 'Researcher' : 'Basic';
 }
 
 // ── Profile popup toggle ──────────────────────────────────────────────────────
@@ -3544,27 +3574,31 @@ function processUpgrade() {
   setTimeout(() => loadUpgradePlan(), 300);
 }
 
-// ── Bug report from app (help page) ──────────────────────────────────────────
+// ── Help / bug report ─────────────────────────────────────────────────────────
 function openAppBugReport() { showPage('help-page'); }
 function submitHelpBug() {
   const action  = document.getElementById('help-bug-action')?.value.trim();
   const desc    = document.getElementById('help-bug-desc')?.value.trim();
   const alertEl = document.getElementById('help-bug-alert');
   if (!action || !desc) {
-    if (alertEl) alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:14px;">Please describe the issue before submitting.</div>`;
+    if (alertEl) alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:14px;">Please fill in both fields before submitting.</div>`;
     return;
   }
-  if (alertEl) alertEl.innerHTML = `<div class="alert alert-success" style="margin-bottom:14px;">Bug report submitted — thank you!</div>`;
-  if (document.getElementById('help-bug-action')) document.getElementById('help-bug-action').value = '';
-  if (document.getElementById('help-bug-desc')) document.getElementById('help-bug-desc').value = '';
+  const subject = encodeURIComponent('Krio Griot Support: ' + action.slice(0, 80));
+  const body    = encodeURIComponent('What I was trying to do:\n' + action + '\n\nWhat happened:\n' + desc + '\n\nBrowser/device: ' + navigator.userAgent.slice(0, 120));
+  window.location.href = 'mailto:support@kriogriot.com?subject=' + subject + '&body=' + body;
+  if (alertEl) alertEl.innerHTML = `<div class="alert alert-success" style="margin-bottom:14px;">Opening your email client…</div>`;
 }
 
-// ── Logout ─────────────────────────────────────────────────────────────────────
+// ── Sign-out modal ────────────────────────────────────────────────────────────
 function handleAppLogout() {
   closeProfileMenu();
-  if (confirm('Sign out of Krio Griot?')) {
-    window.location.href = '/';
-  }
+  const m = document.getElementById('signout-modal');
+  if (m) { m.style.display = 'flex'; }
+}
+function closeSignoutModal() {
+  const m = document.getElementById('signout-modal');
+  if (m) m.style.display = 'none';
 }
 
 // ── Compat: old saveProfile kept for safety ───────────────────────────────────
@@ -3606,6 +3640,18 @@ function escHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+// ── Sign-out modal backdrop + Escape ─────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const m = document.getElementById('signout-modal');
+    if (m && m.style.display === 'flex') { closeSignoutModal(); return; }
+  }
+});
+document.addEventListener('click', function(e) {
+  const m = document.getElementById('signout-modal');
+  if (m && m.style.display === 'flex' && e.target === m) closeSignoutModal();
+});
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 loadDashboard();
