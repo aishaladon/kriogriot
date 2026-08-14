@@ -9,16 +9,20 @@ jobs:
     name: Deploy to Hostinger via SSH
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          username: ${{ secrets.HOSTINGER_SSH_USERNAME }}
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: 65002
-          script: |
-            cd ~/domains/kriogriot.com/kriogriot
-            git pull origin main
-            cp -r client/* ../nodejs/client/
-            cp -r server/* ../nodejs/server/
+        env:
+          SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USERNAME }}
+        run: |
+          sudo apt-get install -y sshpass
+          sshpass -e ssh -o StrictHostKeyChecking=no -p 65002 $SSH_USER@$SSH_HOST "
+            cd ~/domains/kriogriot.com/kriogriot &&
+            git pull origin main &&
+            cp -r client/* ../nodejs/client/ &&
+            cp -r server/* ../nodejs/server/ &&
             cp package.json ../nodejs/package.json
+          "
