@@ -320,6 +320,7 @@ function _pgNav(key, dir) {
 let searchDebounceTimer = null;
 let currentFilter       = 'all';
 let lastSearchResults   = [];
+let lastArchiveResults  = null;
 
 function handleSearchInput() {
   clearTimeout(searchDebounceTimer);
@@ -345,7 +346,12 @@ async function runSearch() {
   listEl.innerHTML         = '<span class="spinner"></span>';
 
   try {
-    lastSearchResults = await api(`/api/search?q=${encodeURIComponent(q)}`);
+    const [internal, external] = await Promise.all([
+      api(`/api/search?q=${encodeURIComponent(q)}`),
+      api(`/api/archives-search?q=${encodeURIComponent(q)}`).catch(() => null),
+    ]);
+    lastSearchResults = internal;
+    lastArchiveResults = external;
     renderSearchResults();
   } catch (err) {
     listEl.innerHTML    = `<div class="alert alert-error">${err.message}</div>`;
@@ -365,31 +371,80 @@ function renderSearchResults() {
         (currentFilter === 'DNA' && (r.type === 'DNA Testing' || r.type === 'DNA Match'))
       );
 
-  headerEl.textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''} for "${q}"`;
+  // Count external archive hits
+  const archiveCount = lastArchiveResults
+    ? (lastArchiveResults.nara?.length || 0) +
+      (lastArchiveResults.slaveVoyages?.length || 0) +
+      (lastArchiveResults.enslaved?.length || 0)
+    : 0;
 
-  if (!filtered.length) {
-    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon empty-icon-svg"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><p>No results found. Try a different search term.</p></div>`;
-    return;
+  const total = filtered.length + (currentFilter === 'all' ? archiveCount : 0);
+  headerEl.textContent = `${total} result${total !== 1 ? 's' : ''} for "${q}"`;
+
+  let html = '';
+
+  // Internal results
+  if (filtered.length) {
+    html += `<div class="search-section-label">Your Records</div>`;
+    html += filtered.map(r => {
+      const typeClass = 'type-' + r.type.replace(/\s+/g, '-');
+      const snippetHtml = r.snippets && r.snippets.length
+        ? `<div class="search-result-snippet">${r.snippets.map(s => escHtml(s)).join('<br>')}</div>`
+        : '';
+      const clickable = r.type === 'Person' ? `onclick="openProfile('${r.id}')"` : '';
+      return `
+        <div class="search-result-item" ${clickable}>
+          <span class="search-result-type ${typeClass}">${escHtml(r.type)}</span>
+          <div style="flex:1;">
+            <div class="search-result-name">${escHtml(r.name)}</div>
+            ${snippetHtml}
+            <div class="search-result-table">${escHtml(r.table)}</div>
+          </div>
+        </div>`;
+    }).join('');
   }
 
-  listEl.innerHTML = filtered.map(r => {
-    const typeClass = 'type-' + r.type.replace(/\s+/g, '-');
-    const snippetHtml = r.snippets.length
-      ? `<div class="search-result-snippet">${r.snippets.map(s => escHtml(s)).join('<br>')}</div>`
-      : '';
-    const clickable = r.type === 'Person'
-      ? `onclick="openProfile('${r.id}')"`
-      : '';
-    return `
-      <div class="search-result-item" ${clickable}>
-        <span class="search-result-type ${typeClass}">${escHtml(r.type)}</span>
-        <div style="flex:1;">
-          <div class="search-result-name">${escHtml(r.name)}</div>
-          ${snippetHtml}
-          <div class="search-result-table">${escHtml(r.table)}</div>
-        </div>
+  // External archive results (only shown on "all" filter)
+  if (currentFilter === 'all' && lastArchiveResults) {
+    const archiveSections = [
+      { key: 'nara',         label: 'National Archives (NARA)',  color: '#1a5276' },
+      { key: 'slaveVoyages', label: 'Slave Voyages Database',    color: '#6e2c00' },
+      { key: 'enslaved',     label: 'Enslaved.org',              color: '#4a235a' },
+    ];
+
+    for (const section of archiveSections) {
+      const hits = lastArchiveResults[section.key] || [];
+      if (!hits.length) continue;
+      html += `<div class="search-section-label" style="margin-top:1.2rem;">${escHtml(section.label)}</div>`;
+      html += hits.map(r => {
+        const meta = [r.date, r.recordGroup, r.origin, r.destination, r.role, r.dataset]
+          .filter(Boolean).map(escHtml).join(' · ');
+        return `
+          <div class="search-result-item archive-result" ${r.url ? `onclick="window.open('${escHtml(r.url)}','_blank')"` : ''} style="cursor:${r.url ? 'pointer' : 'default'};">
+            <span class="search-result-type" style="background:${section.color};color:#fff;min-width:60px;text-align:center;">
+              ${escHtml(section.label.split(' ')[0])}
+            </span>
+            <div style="flex:1;">
+              <div class="search-result-name">${escHtml(r.title)}</div>
+              ${meta ? `<div class="search-result-snippet">${meta}</div>` : ''}
+              ${r.url ? `<div class="search-result-table" style="color:#EF9F27;">↗ View record</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    if (lastArchiveResults.errors && lastArchiveResults.errors.length) {
+      html += `<div style="font-size:.78rem;color:rgba(192,220,248,.4);margin-top:.5rem;padding:0 4px;">
+        Some sources unavailable: ${lastArchiveResults.errors.map(escHtml).join('; ')}
       </div>`;
-  }).join('');
+    }
+  }
+
+  if (!html) {
+    html = `<div class="empty-state"><div class="empty-icon empty-icon-svg"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><p>No results found. Try a different search term.</p></div>`;
+  }
+
+  listEl.innerHTML = html;
 }
 
 function setFilter(filter, btn) {
@@ -407,6 +462,7 @@ function clearSearch() {
   document.getElementById('search-filter-row').style.display  = 'none';
   currentFilter     = 'all';
   lastSearchResults = [];
+  lastArchiveResults = null;
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   const allChip = document.querySelector('.filter-chip[data-filter="all"]');
   if (allChip) allChip.classList.add('active');

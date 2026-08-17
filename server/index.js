@@ -11,6 +11,7 @@ const db        = require('./db-mysql');
 const anthropic = require('./anthropic');
 const { hashPassword, checkPassword, signToken, requireAuth } = require('./auth');
 const { buildGedcomIndex, computeRelationships } = require('./relationships');
+const { searchAllArchives } = require('./archives-search');
 
 // ── GEDCOM cache ───────────────────────────────────────────────────────────────
 const GEDCOM_MAP_FILE  = path.join(__dirname, 'gedcom-map.json');
@@ -423,12 +424,24 @@ Request #${rowId}`;
 // ── All routes below require auth ──────────────────────────────────────────────
 app.use('/api', requireAuth);
 
-// ── Search ─────────────────────────────────────────────────────────────────────
+// ── Internal search ────────────────────────────────────────────────────────────
 app.get('/api/search', async (req, res) => {
   const term = req.query.q || '';
   if (term.trim().length < 2) return res.json([]);
   try {
     res.json(await db.searchAll(req.user.userId, term));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── External archive search ────────────────────────────────────────────────────
+app.get('/api/archives-search', async (req, res) => {
+  const query = (req.query.q || '').trim();
+  if (query.length < 2) return res.json({ nara: [], slaveVoyages: [], enslaved: [], errors: [] });
+  try {
+    const results = await searchAllArchives(query, { limit: 10 });
+    res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
