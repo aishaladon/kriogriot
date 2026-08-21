@@ -398,7 +398,13 @@ async function mangoList({ status, q: search } = {}) {
   return q(sql, params);
 }
 
+async function ping() {
+  const rows = await q('SELECT 1 AS ok');
+  return rows[0].ok === 1;
+}
+
 module.exports = {
+  ping,
   createUser, getUserByEmail, getUserById, updateUserPassword,
   storeResetToken, getResetToken, clearResetToken,
   getAllAncestors, getAncestorProfile, createPerson, updatePerson, deletePerson,

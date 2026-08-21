@@ -188,7 +188,8 @@ app.post('/api/auth/login', async (req, res) => {
     const token = signToken({ userId: user.id, email: user.email });
     res.json({ ok: true, token, user: { id: user.id, email: user.email, name: user.name, plan: user.plan } });
   } catch (err) {
-    console.error('Login error:', err.message);
+    console.error(`Login error: name=${err.name} code=${err.code} errno=${err.errno} syscall=${err.syscall} message=${err.message}`);
+    console.error(err.stack);
     res.status(500).json({ error: err.message });
   }
 });
@@ -759,4 +760,13 @@ app.listen(PORT, () => {
   console.log(`   MySQL host        : ${process.env.MYSQL_HOST || 'localhost'}`);
   console.log(`   MySQL database    : ${process.env.MYSQL_DATABASE || '(not set)'}`);
   console.log(`   SMTP user         : ${process.env.SMTP_USER || '(not set — emails disabled)'}\n`);
+
+  db.ping()
+    .then(() => console.log('   MySQL connection  : ✓ OK\n'))
+    .catch(err => {
+      console.error('   MySQL connection  : ✗ FAILED');
+      console.error(`     name=${err.name} code=${err.code} errno=${err.errno} syscall=${err.syscall}`);
+      console.error(`     message=${err.message}`);
+      console.error(`     stack=${err.stack}`);
+    });
 });
