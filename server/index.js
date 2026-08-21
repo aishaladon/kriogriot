@@ -338,10 +338,13 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const appUrl   = process.env.APP_URL || 'https://kriogriot.com';
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-    // If SMTP is not configured, return the reset URL directly so admin can use it
+    // Never put the reset link in the HTTP response. Anyone can POST any email
+    // address here, so returning it hands out account takeover to a stranger.
+    // When mail cannot be sent the link goes to the server log instead, where
+    // only the account owner can read it.
     if (!process.env.SMTP_USER) {
-      console.warn('SMTP not configured — returning reset URL in response');
-      return res.json({ ok: true, resetUrl });
+      console.warn(`SMTP not configured — reset link for ${user.email}: ${resetUrl}`);
+      return res.json({ ok: true });
     }
 
     try {
@@ -364,9 +367,9 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       });
       res.json({ ok: true });
     } catch (emailErr) {
-      // Email failed — return the link directly so the user isn't stuck
-      console.error('Reset email failed:', emailErr.message);
-      res.json({ ok: true, resetUrl, emailError: emailErr.message });
+      // Same reasoning as above: log the link, never return it.
+      console.error(`Reset email failed (${emailErr.message}) — link for ${user.email}: ${resetUrl}`);
+      res.json({ ok: true });
     }
   } catch (err) {
     console.error('Forgot password error:', err.message);
