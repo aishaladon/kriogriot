@@ -187,16 +187,18 @@ async function updatePerson(userId, personId, fields) {
     const col = nameMap[k] || k;
     if (allowed.includes(col)) { sets.push(`${col} = ?`); vals.push(v); }
   }
-  if (!sets.length) return;
+  if (!sets.length) return 0;
   vals.push(personId, userId);
-  await pool().execute(
+  const [res] = await pool().execute(
     `UPDATE people SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`,
     vals
   );
+  return res.affectedRows;
 }
 
 async function deletePerson(userId, personId) {
-  await pool().execute('DELETE FROM people WHERE id = ? AND user_id = ?', [personId, userId]);
+  const [res] = await pool().execute('DELETE FROM people WHERE id = ? AND user_id = ?', [personId, userId]);
+  return res.affectedRows;
 }
 
 // ── Family connections ─────────────────────────────────────────────────────────
@@ -389,7 +391,25 @@ async function createAnyRecord(userId, table, fields) {
     'Research Log': () => saveResearchLog(userId, fields),
   };
   if (tableMap[table]) return tableMap[table]();
-  throw new Error(`Unknown table: ${table}`);
+
+  // DNA Testing, DNA Matches, Archives and Collections have no bespoke creator,
+  // so build the insert from the alias map. Without this they were unaddable.
+  const sqlTable = TABLE_SQL[table];
+  if (!sqlTable) throw new Error(`Unknown table: ${table}`);
+  const aliases = CLIENT_ALIASES[table] || {};
+  const valid   = new Set(Object.values(aliases));
+  const cols = ['user_id'], vals = [userId];
+  for (const [key, value] of Object.entries(fields || {})) {
+    const col = aliases[key] || key;
+    if (!valid.has(col) || cols.includes(col)) continue;
+    cols.push(col);
+    vals.push(value === '' ? null : value);
+  }
+  const [res] = await pool().execute(
+    `INSERT INTO \`${sqlTable}\` (${cols.map(c => `\`${c}\``).join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    vals
+  );
+  return { id: res.insertId };
 }
 
 // Every table the client can list is also editable and deletable. Both are
@@ -414,20 +434,22 @@ async function updateAnyRecord(userId, table, id, fields) {
     sets.push(`\`${col}\` = ?`);
     vals.push(value === '' ? null : value);
   }
-  if (!sets.length) return;
+  if (!sets.length) return 0;
   vals.push(id, userId);
-  await pool().execute(
+  const [res] = await pool().execute(
     `UPDATE \`${sqlTable}\` SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`, vals
   );
+  return res.affectedRows;
 }
 
 async function deleteAnyRecord(userId, table, id) {
   if (table === 'People') return deletePerson(userId, id);
   const sqlTable = TABLE_SQL[table];
   if (!sqlTable) throw new Error(`Unknown table: ${table}`);
-  await pool().execute(
+  const [res] = await pool().execute(
     `DELETE FROM \`${sqlTable}\` WHERE id = ? AND user_id = ?`, [id, userId]
   );
+  return res.affectedRows;
 }
 
 async function getTableFields(table) {

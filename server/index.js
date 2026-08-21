@@ -584,7 +584,8 @@ app.get('/api/ancestor/:id', async (req, res) => {
 
 app.delete('/api/ancestor/:id', async (req, res) => {
   try {
-    await db.deletePerson(req.user.userId, req.params.id);
+    const removed = await db.deletePerson(req.user.userId, req.params.id);
+    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -684,14 +685,18 @@ app.post('/api/record/:table', async (req, res) => {
 
 app.patch('/api/record/:table/:id', async (req, res) => {
   try {
-    await db.updateAnyRecord(req.user.userId, req.params.table, req.params.id, req.body.fields);
+    // 0 rows means the record belongs to someone else (or does not exist).
+    // Reporting ok would tell the caller a write succeeded when it did not.
+    const changed = await db.updateAnyRecord(req.user.userId, req.params.table, req.params.id, req.body.fields);
+    if (changed === 0) return res.status(404).json({ error: 'Record not found.' });
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.delete('/api/record/:table/:id', async (req, res) => {
   try {
-    await db.deleteAnyRecord(req.user.userId, req.params.table, req.params.id);
+    const removed = await db.deleteAnyRecord(req.user.userId, req.params.table, req.params.id);
+    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
