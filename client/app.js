@@ -1551,7 +1551,7 @@ async function saveSelectedFindings() {
     });
     const s = result.saved;
     showAlert('research-alert',
-      `Saved: ${s.sources.length} source(s), ${s.ancestors.length} person(s), ${s.questions.length} question(s), ${s.dnaMatches.length} DNA match(es) to Airtable.`);
+      `Saved: ${s.sources.length} source(s), ${s.ancestors.length} person(s), ${s.questions.length} question(s), ${s.dnaMatches.length} DNA match(es).`);
 
     // Log this research session to Research Log
     try {
@@ -2324,7 +2324,7 @@ async function saveCurrentMetadata() {
         accessionDate: new Date().toISOString().slice(0,10),
       }),
     });
-    showAlert('archive-alert', 'Archive item saved to Airtable.');
+    showAlert('archive-alert', 'Archive item saved.');
     loadedPages.delete('archives');
     if (document.getElementById('page-archives')?.classList.contains('active')) {
       showPage('archives');
@@ -2427,7 +2427,7 @@ async function saveBulkResult(index) {
         accessionDate: new Date().toISOString().slice(0,10),
       }),
     });
-    showAlert('archive-alert', `"${result.file}" saved to Airtable.`);
+    showAlert('archive-alert', `"${result.file}" saved.`);
     loadedPages.delete('archives');
     if (document.getElementById('page-archives')?.classList.contains('active')) {
       showPage('archives');

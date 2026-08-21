@@ -22,6 +22,67 @@ async function q(sql, params = []) {
   return rows;
 }
 
+// ── Row shaping ────────────────────────────────────────────────────────────────
+// The client was written against the original Airtable field names ("Full Name ★"),
+// while these tables use snake_case columns. Writes already accept both, but reads
+// returned raw rows, so every list and edit form rendered blank. Aliases are added
+// alongside the original columns so nothing that reads snake_case breaks.
+const CLIENT_ALIASES = {
+  'People': {
+    'Full Name ★': 'full_name', 'Birth Name': 'birth_name', 'Also Known As': 'also_known_as',
+    'Sex': 'sex', 'Race/Ethnicity (as recorded)': 'race_ethnicity', 'Birth Date': 'birth_date',
+    'Birth Place': 'birth_place', 'Death Date': 'death_date', 'Death Place': 'death_place',
+    'Burial Place': 'burial_place', 'Generation Number': 'generation_number',
+    'Relation to Self': 'relation_to_self', 'Line': 'line',
+    'Ancestry Profile URL': 'ancestry_profile_url', 'FamilySearch ID': 'family_search_id',
+    'Geni Profile URL': 'geni_profile_url', 'Photo URL': 'photo_url', 'Notes': 'notes',
+  },
+  'Research Questions': {
+    'Research Question ★': 'question', 'Research Question': 'question',
+    'Research Type': 'research_type', 'Status': 'status', 'Priority': 'priority',
+    'Date Opened': 'date_opened', 'Date Resolved': 'date_resolved',
+    'Current Conclusion': 'conclusion', 'Next Action': 'next_action', 'Notes': 'notes',
+  },
+  'Sources': {
+    'Name ★': 'name', 'Source Type': 'source_type', 'Repository': 'repository', 'URL': 'url',
+    'Full Citation': 'full_citation', 'Short Citation': 'short_citation',
+    'Date of Source': 'date_of_source', 'Date Accessed': 'date_accessed',
+    'Notes': 'notes', 'Source File URL': 'source_file_url',
+  },
+  'Research Log': {
+    'Log Title ★': 'title', 'Log Title': 'title', 'Title': 'title',
+    'Date': 'date', 'Summary': 'summary', 'Notes': 'notes',
+  },
+  'DNA Testing': {
+    'Test Label ★': 'name', 'Name ★': 'name', 'Company': 'company',
+    'Date Tested': 'test_date', 'Kit': 'kit_number', 'Notes': 'notes',
+  },
+  'DNA Matches': {
+    'Match Name ★': 'match_name', 'Match Name': 'match_name', 'Shared cM': 'shared_cm',
+    'Predicted Relationship': 'relationship', 'Company': 'company', 'Notes': 'notes',
+  },
+  'Archives': {
+    'Accession Number ★': 'name', 'Name ★': 'name', 'Description': 'description',
+    'Image URL': 'image_url', 'AI Metadata': 'metadata',
+  },
+  'Collections': {
+    'Collection Name ★': 'name', 'Name ★': 'name', 'Description': 'description',
+  },
+};
+
+function toClient(table, row) {
+  if (!row) return row;
+  const aliases = CLIENT_ALIASES[table];
+  if (!aliases) return row;
+  const out = { ...row };
+  for (const [clientName, column] of Object.entries(aliases)) {
+    if (row[column] !== undefined && out[clientName] === undefined) out[clientName] = row[column];
+  }
+  return out;
+}
+
+const toClientRows = (table, rows) => (rows || []).map(r => toClient(table, r));
+
 // ── Users ──────────────────────────────────────────────────────────────────────
 async function createUser({ email, passwordHash, name, plan }) {
   const validPlans = ['free', 'basic-paid', 'upgrade'];
@@ -67,12 +128,12 @@ async function clearResetToken(token) {
 
 // ── People ─────────────────────────────────────────────────────────────────────
 async function getAllAncestors(userId) {
-  return q('SELECT * FROM people WHERE user_id = ? ORDER BY full_name', [userId]);
+  return toClientRows('People', await q('SELECT * FROM people WHERE user_id = ? ORDER BY full_name', [userId]));
 }
 
 async function getAncestorProfile(userId, personId) {
   const rows = await q('SELECT * FROM people WHERE id = ? AND user_id = ?', [personId, userId]);
-  return rows[0] || null;
+  return rows.length ? toClient('People', rows[0]) : null;
 }
 
 async function createPerson(userId, fields) {
@@ -182,7 +243,7 @@ async function getFamilyTreeData(userId) {
 
 // ── Research Questions ─────────────────────────────────────────────────────────
 async function getAllQuestions(userId) {
-  return q('SELECT * FROM research_questions WHERE user_id = ? ORDER BY id DESC', [userId]);
+  return toClientRows('Research Questions', await q('SELECT * FROM research_questions WHERE user_id = ? ORDER BY id DESC', [userId]));
 }
 
 async function saveQuestion(userId, fields) {
@@ -207,7 +268,7 @@ async function saveQuestion(userId, fields) {
 
 // ── Sources ────────────────────────────────────────────────────────────────────
 async function getAllSources(userId) {
-  return q('SELECT * FROM sources WHERE user_id = ? ORDER BY id DESC', [userId]);
+  return toClientRows('Sources', await q('SELECT * FROM sources WHERE user_id = ? ORDER BY id DESC', [userId]));
 }
 
 async function saveSource(userId, fields) {
@@ -235,7 +296,7 @@ async function saveSource(userId, fields) {
 
 // ── Research Log ───────────────────────────────────────────────────────────────
 async function getAllResearchLog(userId) {
-  return q('SELECT * FROM research_log WHERE user_id = ? ORDER BY id DESC', [userId]);
+  return toClientRows('Research Log', await q('SELECT * FROM research_log WHERE user_id = ? ORDER BY id DESC', [userId]));
 }
 
 async function saveResearchLog(userId, fields) {
@@ -254,11 +315,11 @@ async function saveResearchLog(userId, fields) {
 
 // ── DNA ────────────────────────────────────────────────────────────────────────
 async function getAllDNATesting(userId) {
-  return q('SELECT * FROM dna_testing WHERE user_id = ? ORDER BY id DESC', [userId]);
+  return toClientRows('DNA Testing', await q('SELECT * FROM dna_testing WHERE user_id = ? ORDER BY id DESC', [userId]));
 }
 
 async function getAllDNAMatches(userId) {
-  return q('SELECT * FROM dna_matches WHERE user_id = ? ORDER BY id DESC', [userId]);
+  return toClientRows('DNA Matches', await q('SELECT * FROM dna_matches WHERE user_id = ? ORDER BY id DESC', [userId]));
 }
 
 async function saveDNAMatch(userId, fields) {
@@ -271,7 +332,7 @@ async function saveDNAMatch(userId, fields) {
 
 // ── Archives ───────────────────────────────────────────────────────────────────
 async function getAllArchives(userId) {
-  return q('SELECT * FROM archives WHERE user_id = ? ORDER BY id DESC', [userId]);
+  return toClientRows('Archives', await q('SELECT * FROM archives WHERE user_id = ? ORDER BY id DESC', [userId]));
 }
 
 async function saveArchive(userId, fields) {
@@ -284,7 +345,7 @@ async function saveArchive(userId, fields) {
 
 // ── Collections ────────────────────────────────────────────────────────────────
 async function getAllCollections(userId) {
-  return q('SELECT * FROM collections WHERE user_id = ? ORDER BY id DESC', [userId]);
+  return toClientRows('Collections', await q('SELECT * FROM collections WHERE user_id = ? ORDER BY id DESC', [userId]));
 }
 
 // ── Dashboard counts ───────────────────────────────────────────────────────────
@@ -331,14 +392,42 @@ async function createAnyRecord(userId, table, fields) {
   throw new Error(`Unknown table: ${table}`);
 }
 
+// Every table the client can list is also editable and deletable. Both are
+// scoped by user_id, so one account can never modify another's rows.
+const TABLE_SQL = {
+  'People': 'people', 'Research Questions': 'research_questions', 'Sources': 'sources',
+  'Research Log': 'research_log', 'DNA Testing': 'dna_testing', 'DNA Matches': 'dna_matches',
+  'Archives': 'archives', 'Collections': 'collections',
+};
+
 async function updateAnyRecord(userId, table, id, fields) {
   if (table === 'People') return updatePerson(userId, id, fields);
-  throw new Error(`Update not implemented for table: ${table}`);
+  const sqlTable = TABLE_SQL[table];
+  if (!sqlTable) throw new Error(`Unknown table: ${table}`);
+
+  const aliases = CLIENT_ALIASES[table] || {};
+  const columns = new Set(Object.values(aliases));
+  const sets = [], vals = [];
+  for (const [key, value] of Object.entries(fields || {})) {
+    const col = aliases[key] || key;
+    if (!columns.has(col)) continue;         // ignore anything not a real column
+    sets.push(`\`${col}\` = ?`);
+    vals.push(value === '' ? null : value);
+  }
+  if (!sets.length) return;
+  vals.push(id, userId);
+  await pool().execute(
+    `UPDATE \`${sqlTable}\` SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`, vals
+  );
 }
 
 async function deleteAnyRecord(userId, table, id) {
   if (table === 'People') return deletePerson(userId, id);
-  throw new Error(`Delete not implemented for table: ${table}`);
+  const sqlTable = TABLE_SQL[table];
+  if (!sqlTable) throw new Error(`Unknown table: ${table}`);
+  await pool().execute(
+    `DELETE FROM \`${sqlTable}\` WHERE id = ? AND user_id = ?`, [id, userId]
+  );
 }
 
 async function getTableFields(table) {
