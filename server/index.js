@@ -399,6 +399,33 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, anthropicKey: !!process.env.ANTHROPIC_API_KEY });
 });
 
+// Reports whether Anthropic actually accepts the stored key, and flags the
+// paste mistakes that make a present key unusable — surrounding quotes, stray
+// whitespace, a truncated value. Deliberately never returns the key itself.
+app.get('/api/diag/anthropic', async (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY || '';
+  const shape = {
+    present:       !!key,
+    length:        key.length,
+    startsWith:    key.slice(0, 11),
+    endsWith:      key.slice(-4),
+    hasWhitespace: /\s/.test(key),
+    hasQuotes:     /^["']|["']$/.test(key),
+    looksTruncated: key.includes('...') || key.includes('…'),
+  };
+  if (!key) return res.json({ ...shape, accepted: false, reason: 'ANTHROPIC_API_KEY is not set' });
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/models?limit=1', {
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    });
+    const body = await r.json().catch(() => ({}));
+    res.json({ ...shape, status: r.status, accepted: r.ok, reason: r.ok ? null : (body.error?.message || `HTTP ${r.status}`) });
+  } catch (err) {
+    res.json({ ...shape, accepted: false, reason: err.message });
+  }
+});
+
 // ── Mango opt-in (public) ──────────────────────────────────────────────────────
 
 const RECORD_AVAIL = JSON.parse(
