@@ -1,3 +1,19 @@
+// ── process.stdin guard (must run before anything requires mysql2) ────────────
+// Under Hostinger's process manager, fd 0 is in a state where Node cannot
+// construct process.stdin — reading it throws "open EEXIST". mysql2 calls
+// require('process'), and loading a builtin eagerly evaluates every one of its
+// exports, including the stdin getter. That turned every database call into a
+// 500. Probe the getter once here; if it throws, replace it with a plain null
+// so later reads are harmless. No-op on healthy runtimes.
+try {
+  void process.stdin;
+} catch (err) {
+  console.warn(`process.stdin unavailable (${err.message}) — installing null stub.`);
+  Object.defineProperty(process, 'stdin', {
+    value: null, writable: false, enumerable: true, configurable: true,
+  });
+}
+
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const express  = require('express');
