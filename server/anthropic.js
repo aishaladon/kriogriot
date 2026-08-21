@@ -377,10 +377,10 @@ async function generateMetadata(base64Image, mediaType, standard = 'general') {
     messages: [{
       role: 'user',
       content: [
-        {
-          type:   'image',
-          source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: base64Image },
-        },
+        // PDFs go as a document block; anything else is treated as an image.
+        mediaType === 'application/pdf'
+          ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Image } }
+          : { type: 'image',    source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: base64Image } },
         { type: 'text', text: systemPrompt },
       ],
     }],

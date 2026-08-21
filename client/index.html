@@ -582,9 +582,9 @@
           </svg>
         </div>
         <p>Drop image(s) here or click to browse</p>
-        <p style="font-size:.75rem;margin-top:6px;">JPG, PNG, TIFF, GIF — up to 20 MB each</p>
+        <p style="font-size:.75rem;margin-top:6px;">JPG, PNG, TIFF, GIF, PDF — up to 20 MB each</p>
       </div>
-      <input id="file-input" type="file" accept="image/*" multiple style="display:none" onchange="handleFileSelect(event)" />
+      <input id="file-input" type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="handleFileSelect(event)" />
 
       <!-- Bulk queue -->
       <div id="bulk-queue" style="margin-top:16px;display:none;">
@@ -608,6 +608,10 @@
       <div style="display:flex;gap:20px;align-items:flex-start;">
         <div style="flex-shrink:0;">
           <img id="preview-img" style="max-width:280px;max-height:280px;border-radius:var(--radius);border:1px solid var(--border);" />
+          <div id="preview-doc" style="display:none;width:280px;height:280px;border-radius:var(--radius);border:1px solid var(--border);flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.15);">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span id="preview-doc-name" style="font-size:.8rem;color:var(--muted);max-width:240px;text-align:center;word-break:break-word;"></span>
+          </div>
         </div>
         <div style="flex:1;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
@@ -651,7 +655,7 @@
             <div class="se-step-num">1</div>
             <div>
               <div class="se-step-title">Upload your image</div>
-              <p class="se-step-body">Drag and drop one image or a full batch. Supported formats: JPG, PNG, TIFF, GIF up to 20 MB each. For bulk jobs, all images enter a processing queue so you can monitor progress in real time.</p>
+              <p class="se-step-body">Drag and drop one file or a full batch. Supported formats: JPG, PNG, TIFF, GIF, and PDF up to 20 MB each. For bulk jobs, every file enters a processing queue so you can monitor progress in real time.</p>
             </div>
           </div>
           <div class="se-step">

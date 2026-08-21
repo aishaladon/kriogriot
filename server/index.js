@@ -99,8 +99,9 @@ function makeDiskUploader(subdir) {
     }),
     limits:     { fileSize: 20 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      if (file.mimetype.startsWith('image/')) cb(null, true);
-      else cb(new Error('Only image files are allowed'));
+      // Archival material arrives as scans and as PDFs.
+      if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') cb(null, true);
+      else cb(new Error('Only image and PDF files are allowed'));
     },
   });
 }

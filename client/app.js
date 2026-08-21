@@ -2212,14 +2212,18 @@ function handleFileSelect(event) {
   event.target.value = '';
 }
 
-function handleFiles(files) {
-  const imageFiles = files.filter(f => f.type.startsWith('image/'));
-  if (!imageFiles.length) return;
+function isScannable(file) {
+  return file.type.startsWith('image/') || file.type === 'application/pdf';
+}
 
-  if (imageFiles.length === 1) {
-    processSingleFile(imageFiles[0]);
+function handleFiles(files) {
+  const accepted = files.filter(isScannable);
+  if (!accepted.length) return;
+
+  if (accepted.length === 1) {
+    processSingleFile(accepted[0]);
   } else {
-    addToQueue(imageFiles);
+    addToQueue(accepted);
   }
 }
 
@@ -2233,7 +2237,15 @@ function processSingleFile(file) {
     state.currentImageB64  = match[2];
     state.currentImageType = match[1];
 
-    document.getElementById('preview-img').src = dataUrl;
+    // A PDF cannot render in an <img>, so show a document placeholder instead.
+    const isPdf   = state.currentImageType === 'application/pdf';
+    const imgEl   = document.getElementById('preview-img');
+    const docEl   = document.getElementById('preview-doc');
+    imgEl.style.display = isPdf ? 'none' : '';
+    docEl.style.display = isPdf ? 'flex' : 'none';
+    if (isPdf) document.getElementById('preview-doc-name').textContent = file.name;
+    else       imgEl.src = dataUrl;
+
     document.getElementById('single-preview').style.display = 'flex';
     document.getElementById('bulk-queue').style.display     = 'none';
 
@@ -2462,19 +2474,29 @@ async function handleModalImageUpload(input, fid, uploadEndpoint, urlFieldId) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-    // Show thumbnail preview above the upload button
-    const reader = new FileReader();
-    reader.onload = e => {
-      const label = document.getElementById(`${fid}-file`).closest('label');
-      let preview = label.previousElementSibling;
-      if (!preview || preview.tagName !== 'IMG') {
-        preview = document.createElement('img');
+    // Show a preview above the upload button. PDFs get a filename chip rather
+    // than a thumbnail, since they cannot render in an <img>.
+    const label = document.getElementById(`${fid}-file`).closest('label');
+    const existing = label.previousElementSibling;
+    if (existing && (existing.tagName === 'IMG' || existing.dataset.filePreview)) existing.remove();
+
+    if (file.type === 'application/pdf') {
+      const chip = document.createElement('div');
+      chip.dataset.filePreview = 'pdf';
+      chip.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.82rem;color:var(--muted);';
+      chip.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span></span>`;
+      chip.querySelector('span').textContent = file.name;
+      label.parentNode.insertBefore(chip, label);
+    } else {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const preview = document.createElement('img');
         preview.style.cssText = 'max-width:100%;max-height:160px;border-radius:8px;margin-bottom:6px;display:block;object-fit:cover;';
+        preview.src = e.target.result;
         label.parentNode.insertBefore(preview, label);
-      }
-      preview.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+      };
+      reader.readAsDataURL(file);
+    }
 
     // Auto-fill the paired URL field
     if (urlField) urlField.value = data.imageUrl;
@@ -3240,7 +3262,7 @@ function renderModalForm(tableName, record) {
       input = `${preview}
         <label class="archive-upload-label" for="${fid}-file">
           Choose photo to upload
-          <input type="file" id="${fid}-file" accept="image/*"
+          <input type="file" id="${fid}-file" accept="image/*,application/pdf"
             style="display:none;"
             onchange="handleModalImageUpload(this,'${fid}',${endpoint},${urlFid})" />
         </label>
