@@ -59,7 +59,12 @@ const app = express();
 // ── Multer ─────────────────────────────────────────────────────────────────────
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-const UPLOAD_ROOT  = path.join(__dirname, '../uploads');
+// Defaults to <app>/uploads, which sits inside the folder a zip redeploy
+// replaces — set UPLOAD_DIR to an absolute path outside the app so scans
+// survive deploys (and so the NAS can mirror one stable location).
+const UPLOAD_ROOT  = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(__dirname, '../uploads');
 const AUTH_COOKIE  = 'kg_token';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // matches the 7d token expiry
 
@@ -834,7 +839,8 @@ app.listen(PORT, () => {
   console.log(`   Anthropic API key : ${process.env.ANTHROPIC_API_KEY ? '✓ loaded' : '✗ MISSING'}`);
   console.log(`   MySQL host        : ${process.env.MYSQL_HOST || 'localhost'}`);
   console.log(`   MySQL database    : ${process.env.MYSQL_DATABASE || '(not set)'}`);
-  console.log(`   SMTP user         : ${process.env.SMTP_USER || '(not set — emails disabled)'}\n`);
+  console.log(`   SMTP user         : ${process.env.SMTP_USER || '(not set — emails disabled)'}`);
+  console.log(`   Upload directory  : ${UPLOAD_ROOT}\n`);
 
   db.ping()
     .then(() => console.log('   MySQL connection  : ✓ OK\n'))
