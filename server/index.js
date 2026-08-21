@@ -25,7 +25,7 @@ const crypto   = require('crypto');
 
 const db        = require('./db-mysql');
 const anthropic = require('./anthropic');
-const { hashPassword, checkPassword, signToken, requireAuth } = require('./auth');
+const { hashPassword, checkPassword, signToken, verifyToken, requireAuth } = require('./auth');
 const { buildGedcomIndex, computeRelationships } = require('./relationships');
 const { searchAllArchives } = require('./archives-search');
 
@@ -33,6 +33,12 @@ const { searchAllArchives } = require('./archives-search');
 const GEDCOM_MAP_FILE  = path.join(__dirname, 'gedcom-map.json');
 const GEDCOM_DATA_FILE = path.join(__dirname, 'gedcom-data.json');
 let _gedcomCache = null;
+
+// Which account the bundled GEDCOM belongs to. Unset means no account gets it.
+function gedcomOwnerId() {
+  const id = process.env.GEDCOM_OWNER_USER_ID;
+  return id ? String(id).trim() : null;
+}
 
 function loadGedcomCache() {
   if (_gedcomCache) return _gedcomCache;
@@ -53,12 +59,34 @@ const app = express();
 // ── Multer ─────────────────────────────────────────────────────────────────────
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
+const UPLOAD_ROOT  = path.join(__dirname, '../uploads');
+const AUTH_COOKIE  = 'kg_token';
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // matches the 7d token expiry
+
+// The API authenticates with a bearer header, but <img src="/uploads/…"> can't
+// send one — so the same token is mirrored into an httpOnly cookie.
+function setAuthCookie(res, token) {
+  res.setHeader('Set-Cookie',
+    `${AUTH_COOKIE}=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${COOKIE_MAX_AGE}`);
+}
+
+function clearAuthCookie(res) {
+  res.setHeader('Set-Cookie', `${AUTH_COOKIE}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`);
+}
+
+// Files live under uploads/u<userId>/<subdir>/ so one account's photos and
+// scanned records can never be served to another. Upload routes sit behind
+// requireAuth, so req.user is always present here.
 function makeDiskUploader(subdir) {
-  const dir = path.join(__dirname, '../uploads', subdir);
-  fs.mkdirSync(dir, { recursive: true });
   return multer({
     storage: multer.diskStorage({
-      destination: (req, file, cb) => cb(null, dir),
+      destination: (req, file, cb) => {
+        const userId = req.user && req.user.userId;
+        if (!userId) return cb(new Error('Not authenticated.'));
+        const dir = path.join(UPLOAD_ROOT, `u${userId}`, subdir);
+        fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+      },
       filename:    (req, file, cb) => {
         const ext  = path.extname(file.originalname).toLowerCase() || '.jpg';
         cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
@@ -79,7 +107,33 @@ const uploadSourceFile   = makeDiskUploader('sources');
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, '../client'), { index: false }));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Uploads are family photos and scanned records. They were previously served
+// anonymously to anyone with the URL. Require a session, and for the per-user
+// paths require that the session owns the file. Browsers can't attach a bearer
+// header to <img src>, so the token is also accepted from the auth cookie.
+function tokenFromRequest(req) {
+  const header = req.headers.authorization || '';
+  if (header.startsWith('Bearer ')) return header.slice(7);
+  for (const part of (req.headers.cookie || '').split(';')) {
+    const [name, ...rest] = part.trim().split('=');
+    if (name === AUTH_COOKIE) return decodeURIComponent(rest.join('='));
+  }
+  return null;
+}
+
+app.use('/uploads', (req, res, next) => {
+  const token = tokenFromRequest(req);
+  if (!token) return res.status(401).send('Not authenticated.');
+  let user;
+  try { user = verifyToken(token); }
+  catch { return res.status(401).send('Session expired.'); }
+
+  // Legacy files predate per-user folders and have no owner in their path;
+  // they stay readable to any signed-in account until they are migrated.
+  const owner = (req.path.match(/^\/u(\d+)\//) || [])[1];
+  if (owner && String(user.userId) !== owner) return res.status(403).send('Forbidden.');
+  next();
+}, express.static(UPLOAD_ROOT));
 
 // ── Email helper ───────────────────────────────────────────────────────────────
 async function sendEmail({ to, subject, html }) {
@@ -140,6 +194,7 @@ app.post('/api/auth/register', async (req, res) => {
     const passwordHash = await hashPassword(password);
     const user  = await db.createUser({ email, passwordHash, name, plan });
     const token = signToken({ userId: user.id, email: user.email });
+    setAuthCookie(res, token);
 
     const appUrl = process.env.APP_URL || 'https://kriogriot.com';
     let emailSent = false;
@@ -202,6 +257,7 @@ app.post('/api/auth/login', async (req, res) => {
     const ok = await checkPassword(password, user.password_hash);
     if (!ok) return res.status(401).json({ error: 'Invalid email or password.' });
     const token = signToken({ userId: user.id, email: user.email });
+    setAuthCookie(res, token);
     res.json({ ok: true, token, user: { id: user.id, email: user.email, name: user.name, plan: user.plan } });
   } catch (err) {
     console.error(`Login error: name=${err.name} code=${err.code} errno=${err.errno} syscall=${err.syscall} message=${err.message}`);
@@ -220,7 +276,7 @@ app.get('/api/auth/me', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/auth/logout', (req, res) => res.json({ ok: true }));
+app.post('/api/auth/logout', (req, res) => { clearAuthCookie(res); res.json({ ok: true }); });
 
 // ── SMTP diagnostic (admin-only, remove after confirming email works) ──────────
 app.get('/smtp-test', async (req, res) => {
@@ -509,7 +565,10 @@ app.post('/api/merge-ancestors', async (req, res) => {
 // ── Relationships ──────────────────────────────────────────────────────────────
 async function getRelationshipsFor(userId, recordId) {
   try {
-    const gedcom = loadGedcomCache();
+    // The GEDCOM file is a single global import of one person's tree (2,959
+    // individuals). Serving it to every account would expose one family's
+    // records to all of them, so it only applies to the account that owns it.
+    const gedcom = gedcomOwnerId() === String(userId) ? loadGedcomCache() : null;
     const people = await db.getFamilyTreeData(userId);
     const peopleById = {};
     for (const p of (people || [])) peopleById[p.id] = p;
@@ -681,17 +740,17 @@ app.post('/api/metadata', upload.single('image'), async (req, res) => {
 // ── File uploads ───────────────────────────────────────────────────────────────
 app.post('/api/upload-archive-image', uploadArchiveImage.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/archives/${req.file.filename}` });
+  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/archives/${req.file.filename}` });
 });
 
 app.post('/api/upload-person-photo', uploadPersonPhoto.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/people/${req.file.filename}` });
+  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/people/${req.file.filename}` });
 });
 
 app.post('/api/upload-source-file', uploadSourceFile.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/sources/${req.file.filename}` });
+  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/sources/${req.file.filename}` });
 });
 
 app.post('/api/save-archive', async (req, res) => {
