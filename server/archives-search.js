@@ -8,9 +8,9 @@
 //                 project moved to a POST-based microservice (api.slavevoyages.org).
 //                 Left disabled until the new request/response contract is wired
 //                 and tested against the live host.
-//   Enslaved.org— re-architected into a Wikibase (lod.enslaved.org). The old
-//                 api.enslaved.org/sparql endpoint no longer exists. Disabled
-//                 until the new query service endpoint is confirmed.
+//   Enslaved.org— WORKING. Public SPARQL was retired, but the site is now a
+//                 Wikibase and its MediaWiki wbsearchentities API is open. We
+//                 search people by name there. No key required.
 //
 // Each source is guarded so one being unavailable never breaks the others, and
 // the response tells the client exactly which sources ran and which were skipped.
@@ -64,11 +64,36 @@ async function searchSlaveVoyages() {
   throw err;
 }
 
-// ── Enslaved.org (disabled — see header note) ────────────────────────────────
-async function searchEnslaved() {
-  const err = new Error('Enslaved.org search is temporarily unavailable (API migrated).');
-  err.skipped = true;
-  throw err;
+// ── Enslaved.org (Wikibase MediaWiki API) ────────────────────────────────────
+const ENSLAVED_API = 'https://lod.enslaved.org/w/api.php';
+
+async function searchEnslaved(query, { limit = 10 } = {}) {
+  const params = new URLSearchParams({
+    action: 'wbsearchentities',
+    search: query,
+    language: 'en',
+    uselang: 'en',
+    format: 'json',
+    type: 'item',
+    limit: String(limit),
+  });
+  const res = await fetch(`${ENSLAVED_API}?${params}`, {
+    headers: { 'Accept': 'application/json' },
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!res.ok) throw new Error(`Enslaved.org API error: ${res.status}`);
+
+  const data = await res.json();
+  return (data.search || []).map(item => ({
+    source:      'Enslaved',
+    sourceLabel: 'Enslaved.org',
+    id:          item.id || '',
+    title:       item.label || 'Unknown person',
+    // Enslaved uses the description slot for the source record id (e.g. LSD-PER-…),
+    // which tells the researcher which dataset the person comes from.
+    recordId:    item.description || null,
+    url:         item.url || item.concepturi || null,
+  }));
 }
 
 // ── Fan-out across all sources ────────────────────────────────────────────────

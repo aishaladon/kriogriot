@@ -417,7 +417,7 @@ function renderSearchResults() {
       if (!hits.length) continue;
       html += `<div class="search-section-label" style="margin-top:1.2rem;">${escHtml(section.label)}</div>`;
       html += hits.map(r => {
-        const meta = [r.date, r.recordGroup, r.origin, r.destination, r.role, r.dataset]
+        const meta = [r.date, r.level, r.recordGroup, r.recordId, r.origin, r.destination, r.role, r.dataset]
           .filter(Boolean).map(escHtml).join(' · ');
         return `
           <div class="search-result-item archive-result" ${r.url ? `onclick="window.open('${escHtml(r.url)}','_blank')"` : ''} style="cursor:${r.url ? 'pointer' : 'default'};">
