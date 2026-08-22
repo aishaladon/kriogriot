@@ -31,6 +31,13 @@
   let _families     = [];      // raw GEDCOM family records
   let _gedcomRootId = null;
   let _gedcomLoaded = false;
+
+  // All /api routes require a bearer token. app.js owns getToken(); fall back to
+  // reading the same localStorage key if load order ever changes.
+  function ftAuthHeaders(extra) {
+    const t = (typeof getToken === 'function') ? getToken() : localStorage.getItem('kg_token');
+    return Object.assign({}, extra || {}, t ? { Authorization: 'Bearer ' + t } : {});
+  }
   let _overrides    = {};      // airtableId → { fatherId, motherId }
   let _rootData     = null;
   let _svg          = null;
@@ -581,7 +588,7 @@
     }
     // Fallback: open edit modal directly
     try {
-      const res    = await fetch(`/api/ancestor/${personId}`);
+      const res    = await fetch(`/api/ancestor/${personId}`, { headers: ftAuthHeaders() });
       const record = await res.json();
       if (record && record.id && typeof openEditModal === 'function') {
         openEditModal('People', record.id, record);
@@ -779,7 +786,7 @@
       };
       const res  = await fetch('/api/family-tree/connect', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: ftAuthHeaders({ 'Content-Type': 'application/json' }),
         body:    JSON.stringify(body),
       });
       const data = await res.json();
@@ -813,6 +820,7 @@
     try {
       const res  = await fetch(`/api/family-tree/connect/${encodeURIComponent(_connectTarget.id)}`, {
         method: 'DELETE',
+        headers: ftAuthHeaders(),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Remove failed');
@@ -966,7 +974,7 @@
       </div>`;
 
     try {
-      const res  = await fetch('/api/family-tree');
+      const res  = await fetch('/api/family-tree', { headers: ftAuthHeaders() });
       const raw  = await res.json();
       if (raw.error) throw new Error(raw.error);
 

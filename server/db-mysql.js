@@ -361,7 +361,20 @@ async function getDashboardCounts(userId) {
     q('SELECT COUNT(*) AS c FROM archives WHERE user_id = ?', [userId]),
     q('SELECT COUNT(*) AS c FROM collections WHERE user_id = ?', [userId]),
   ]);
+  // Six most-recently-added people for the dashboard cards.
+  const recent = await q(
+    'SELECT * FROM people WHERE user_id = ? ORDER BY id DESC LIMIT 6', [userId]
+  );
+
   return {
+    // Names the client reads (were missing after the Airtable→MySQL move, so
+    // the dashboard always showed dashes and no recent ancestors).
+    ancestorsCount: people.c,
+    questionsCount: questions.c,
+    archivesCount:  archives.c + collections.c,
+    dnaCount:       dna.c,
+    recentAncestors: toClientRows('People', recent),
+    // Original keys kept for any other caller.
     people:      people.c,
     questions:   questions.c,
     sources:     sources.c,
