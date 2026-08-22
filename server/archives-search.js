@@ -4,10 +4,11 @@
 //   NARA        — working contract, but requires an API key. Request one by
 //                 emailing Catalog_API@nara.gov, then set NARA_API_KEY. Without
 //                 the key the catalog host returns its web-app HTML, not JSON.
-//   SlaveVoyages— the old www.slavevoyages.org/voyage/api endpoint is gone. The
-//                 project moved to a POST-based microservice (api.slavevoyages.org).
-//                 Left disabled until the new request/response contract is wired
-//                 and tested against the live host.
+//   SlaveVoyages— the old www.slavevoyages.org/voyage/api endpoint is gone; the
+//                 project moved to api.slavevoyages.org. As of 2026-08-21 that
+//                 host's TLS certificate has EXPIRED, so no client can connect
+//                 securely — this is broken on their side, not ours. Disabled
+//                 until they renew; re-enable and wire the new contract then.
 //   Enslaved.org— WORKING. Public SPARQL was retired, but the site is now a
 //                 Wikibase and its MediaWiki wbsearchentities API is open. We
 //                 search people by name there. No key required.
@@ -59,7 +60,7 @@ async function searchNARA(query, { limit = 10 } = {}) {
 
 // ── SlaveVoyages (disabled — see header note) ────────────────────────────────
 async function searchSlaveVoyages() {
-  const err = new Error('SlaveVoyages search is temporarily unavailable (API migrated).');
+  const err = new Error('SlaveVoyages search is temporarily unavailable (their API certificate has expired).');
   err.skipped = true;
   throw err;
 }
