@@ -22,66 +22,36 @@ async function q(sql, params = []) {
   return rows;
 }
 
-// ── Row shaping ────────────────────────────────────────────────────────────────
-// The client was written against the original Airtable field names ("Full Name ★"),
-// while these tables use snake_case columns. Writes already accept both, but reads
-// returned raw rows, so every list and edit form rendered blank. Aliases are added
-// alongside the original columns so nothing that reads snake_case breaks.
+// ── Allowed column sets ────────────────────────────────────────────────────────
+// The client now sends snake_case column names directly. These Sets list the
+// columns that updateAnyRecord and createAnyRecord are permitted to write.
 const CLIENT_ALIASES = {
-  'People': {
-    'Full Name ★': 'full_name', 'Birth Name': 'birth_name', 'Also Known As': 'also_known_as',
-    'Sex': 'sex', 'Race/Ethnicity (as recorded)': 'race_ethnicity', 'Birth Date': 'birth_date',
-    'Birth Place': 'birth_place', 'Death Date': 'death_date', 'Death Place': 'death_place',
-    'Burial Place': 'burial_place', 'Generation Number': 'generation_number',
-    'Relation to Self': 'relation_to_self', 'Line': 'line',
-    'Ancestry Profile URL': 'ancestry_profile_url', 'FamilySearch ID': 'family_search_id',
-    'Geni Profile URL': 'geni_profile_url', 'Photo URL': 'photo_url', 'Notes': 'notes',
-  },
-  'Research Questions': {
-    'Research Question ★': 'question', 'Research Question': 'question',
-    'Research Type': 'research_type', 'Status': 'status', 'Priority': 'priority',
-    'Date Opened': 'date_opened', 'Date Resolved': 'date_resolved',
-    'Current Conclusion': 'conclusion', 'Next Action': 'next_action', 'Notes': 'notes',
-  },
-  'Sources': {
-    'Name ★': 'name', 'Source Type': 'source_type', 'Repository': 'repository', 'URL': 'url',
-    'Full Citation': 'full_citation', 'Short Citation': 'short_citation',
-    'Date of Source': 'date_of_source', 'Date Accessed': 'date_accessed',
-    'Notes': 'notes', 'Source File URL': 'source_file_url',
-  },
-  'Research Log': {
-    'Log Title ★': 'title', 'Log Title': 'title', 'Title': 'title',
-    'Date': 'date', 'Summary': 'summary', 'Notes': 'notes',
-  },
-  'DNA Testing': {
-    'Test Label ★': 'name', 'Name ★': 'name', 'Company': 'company',
-    'Date Tested': 'test_date', 'Kit': 'kit_number', 'Notes': 'notes',
-  },
-  'DNA Matches': {
-    'Match Name ★': 'match_name', 'Match Name': 'match_name', 'Shared cM': 'shared_cm',
-    'Predicted Relationship': 'relationship', 'Company': 'company', 'Notes': 'notes',
-  },
-  'Archives': {
-    'Accession Number ★': 'name', 'Name ★': 'name', 'Description': 'description',
-    'Image URL': 'image_url', 'AI Metadata': 'metadata',
-  },
-  'Collections': {
-    'Collection Name ★': 'name', 'Name ★': 'name', 'Description': 'description',
-  },
+  'People':             new Set(['full_name','birth_name','also_known_as','sex','race_ethnicity',
+                          'birth_date','birth_place','death_date','death_place','burial_place',
+                          'generation_number','relation_to_self','line','ancestry_profile_url',
+                          'family_search_id','geni_profile_url','photo_url','notes']),
+  'Research Questions': new Set(['question','research_type','status','priority','date_opened',
+                          'date_resolved','conclusion','next_action','notes']),
+  'Sources':            new Set(['name','source_type','repository','url','full_citation',
+                          'short_citation','date_of_source','date_accessed','notes','source_file_url',
+                          'record_type','physical_location','search_status','search_notes']),
+  'Research Log':       new Set(['title','date','summary','notes']),
+  'DNA Testing':        new Set(['name','company','test_type','haplogroup','ethnicity_estimates',
+                          'documentary_corroboration','analysis_notes','test_date','kit_number','notes']),
+  'DNA Matches':        new Set(['match_name','shared_cm','relationship','company','notes',
+                          'shared_segments','longest_segment','likely_relationship',
+                          'possible_relationships','clustering_group','correspondence_status',
+                          'last_contact','correspondence_log']),
+  'Archives':           new Set(['name','description','image_url','metadata','formats_included',
+                          'inclusive_dates','accession_date','extent','condition_state',
+                          'storage_type','restrictions','recommended_treatments']),
+  'Collections':        new Set(['name','description','image_url','status','access_restrictions',
+                          'allow_share_online']),
 };
 
-function toClient(table, row) {
-  if (!row) return row;
-  const aliases = CLIENT_ALIASES[table];
-  if (!aliases) return row;
-  const out = { ...row };
-  for (const [clientName, column] of Object.entries(aliases)) {
-    if (row[column] !== undefined && out[clientName] === undefined) out[clientName] = row[column];
-  }
-  return out;
-}
-
-const toClientRows = (table, rows) => (rows || []).map(r => toClient(table, r));
+// Rows from MySQL already use snake_case column names — no aliasing needed.
+function toClient(table, row) { return row; }
+const toClientRows = (table, rows) => rows || [];
 
 // ── Users ──────────────────────────────────────────────────────────────────────
 async function createUser({ email, passwordHash, name, plan }) {
@@ -146,46 +116,34 @@ async function createPerson(userId, fields) {
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       userId,
-      fields.full_name || fields['Full Name ★'] || null,
-      fields.birth_name || fields['Birth Name'] || null,
-      fields.also_known_as || fields['Also Known As'] || null,
-      fields.sex || fields['Sex'] || null,
-      fields.race_ethnicity || fields['Race/Ethnicity (as recorded)'] || null,
-      fields.birth_date || fields['Birth Date'] || null,
-      fields.birth_place || fields['Birth Place'] || null,
-      fields.death_date || fields['Death Date'] || null,
-      fields.death_place || fields['Death Place'] || null,
-      fields.burial_place || fields['Burial Place'] || null,
-      fields.generation_number || fields['Generation Number'] || null,
-      fields.relation_to_self || fields['Relation to Self'] || null,
-      fields.line || fields['Line'] || null,
-      fields.ancestry_profile_url || fields['Ancestry Profile URL'] || null,
-      fields.family_search_id || fields['FamilySearch ID'] || null,
-      fields.geni_profile_url || fields['Geni Profile URL'] || null,
-      fields.photo_url || fields['Photo URL'] || null,
-      fields.notes || fields['Notes'] || null,
+      fields.full_name || null,
+      fields.birth_name || null,
+      fields.also_known_as || null,
+      fields.sex || null,
+      fields.race_ethnicity || null,
+      fields.birth_date || null,
+      fields.birth_place || null,
+      fields.death_date || null,
+      fields.death_place || null,
+      fields.burial_place || null,
+      fields.generation_number || null,
+      fields.relation_to_self || null,
+      fields.line || null,
+      fields.ancestry_profile_url || null,
+      fields.family_search_id || null,
+      fields.geni_profile_url || null,
+      fields.photo_url || null,
+      fields.notes || null,
     ]
   );
   return { id: result[0].insertId, ...fields };
 }
 
 async function updatePerson(userId, personId, fields) {
-  const nameMap = {
-    'Full Name ★': 'full_name', 'Birth Name': 'birth_name',
-    'Also Known As': 'also_known_as', 'Sex': 'sex',
-    'Race/Ethnicity (as recorded)': 'race_ethnicity', 'Birth Date': 'birth_date',
-    'Birth Place': 'birth_place', 'Death Date': 'death_date',
-    'Death Place': 'death_place', 'Burial Place': 'burial_place',
-    'Generation Number': 'generation_number', 'Relation to Self': 'relation_to_self',
-    'Line': 'line', 'Ancestry Profile URL': 'ancestry_profile_url',
-    'FamilySearch ID': 'family_search_id', 'Geni Profile URL': 'geni_profile_url',
-    'Photo URL': 'photo_url', 'Notes': 'notes',
-  };
-  const allowed = Object.values(nameMap);
+  const allowed = CLIENT_ALIASES['People'];
   const sets = [], vals = [];
-  for (const [k, v] of Object.entries(fields)) {
-    const col = nameMap[k] || k;
-    if (allowed.includes(col)) { sets.push(`${col} = ?`); vals.push(v); }
+  for (const [col, v] of Object.entries(fields)) {
+    if (allowed.has(col)) { sets.push(`${col} = ?`); vals.push(v); }
   }
   if (!sets.length) return 0;
   vals.push(personId, userId);
@@ -255,13 +213,13 @@ async function saveQuestion(userId, fields) {
      VALUES (?,?,?,?,?,?,?,?,?)`,
     [
       userId,
-      fields['Research Question ★'] || fields.question || null,
-      fields['Research Type'] || null,
-      fields['Status'] || null,
-      fields['Priority'] || null,
-      fields['Date Opened'] || null,
-      fields['Current Conclusion'] || null,
-      fields['Next Action'] || null,
+      fields.question || null,
+      fields.research_type || null,
+      fields.status || null,
+      fields.priority || null,
+      fields.date_opened || null,
+      fields.conclusion || null,
+      fields.next_action || null,
       fields.notes || null,
     ]
   );
@@ -281,16 +239,16 @@ async function saveSource(userId, fields) {
      VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
     [
       userId,
-      fields['Name ★'] || fields.name || null,
-      fields['Source Type'] || null,
-      fields['Repository'] || null,
-      fields['URL'] || null,
-      fields['Full Citation'] || null,
-      fields['Short Citation'] || null,
-      fields['Date of Source'] || null,
-      fields['Date Accessed'] || null,
+      fields.name || null,
+      fields.source_type || null,
+      fields.repository || null,
+      fields.url || null,
+      fields.full_citation || null,
+      fields.short_citation || null,
+      fields.date_of_source || null,
+      fields.date_accessed || null,
       fields.notes || null,
-      fields['Source File URL'] || null,
+      fields.source_file_url || null,
     ]
   );
   return { id: result[0].insertId };
@@ -306,8 +264,8 @@ async function saveResearchLog(userId, fields) {
     'INSERT INTO research_log (user_id, title, date, summary, notes) VALUES (?,?,?,?,?)',
     [
       userId,
-      fields.title || fields['Title'] || null,
-      fields.date  || fields['Date']  || null,
+      fields.title || null,
+      fields.date  || null,
       fields.summary || null,
       fields.notes || null,
     ]
@@ -409,11 +367,9 @@ async function createAnyRecord(userId, table, fields) {
   // so build the insert from the alias map. Without this they were unaddable.
   const sqlTable = TABLE_SQL[table];
   if (!sqlTable) throw new Error(`Unknown table: ${table}`);
-  const aliases = CLIENT_ALIASES[table] || {};
-  const valid   = new Set(Object.values(aliases));
+  const valid = CLIENT_ALIASES[table] || new Set();
   const cols = ['user_id'], vals = [userId];
-  for (const [key, value] of Object.entries(fields || {})) {
-    const col = aliases[key] || key;
+  for (const [col, value] of Object.entries(fields || {})) {
     if (!valid.has(col) || cols.includes(col)) continue;
     cols.push(col);
     vals.push(value === '' ? null : value);
@@ -438,11 +394,9 @@ async function updateAnyRecord(userId, table, id, fields) {
   const sqlTable = TABLE_SQL[table];
   if (!sqlTable) throw new Error(`Unknown table: ${table}`);
 
-  const aliases = CLIENT_ALIASES[table] || {};
-  const columns = new Set(Object.values(aliases));
+  const columns = CLIENT_ALIASES[table] || new Set();
   const sets = [], vals = [];
-  for (const [key, value] of Object.entries(fields || {})) {
-    const col = aliases[key] || key;
+  for (const [col, value] of Object.entries(fields || {})) {
     if (!columns.has(col)) continue;         // ignore anything not a real column
     sets.push(`\`${col}\` = ?`);
     vals.push(value === '' ? null : value);
@@ -467,10 +421,10 @@ async function deleteAnyRecord(userId, table, id) {
 
 async function getTableFields(table) {
   const fieldMap = {
-    'People': ['Full Name ★','Birth Name','Also Known As','Sex','Race/Ethnicity (as recorded)','Birth Date','Birth Place','Death Date','Death Place','Burial Place','Generation Number','Relation to Self','Line','Ancestry Profile URL','FamilySearch ID','Geni Profile URL','Photo URL','Notes'],
-    'Research Questions': ['Research Question ★','Research Type','Status','Priority','Date Opened','Current Conclusion','Next Action'],
-    'Sources': ['Name ★','Source Type','Repository','URL','Full Citation','Short Citation','Date of Source','Date Accessed'],
-    'Research Log': ['Title','Date','Summary','Notes'],
+    'People': ['full_name','birth_name','also_known_as','sex','race_ethnicity','birth_date','birth_place','death_date','death_place','burial_place','generation_number','relation_to_self','line','ancestry_profile_url','family_search_id','geni_profile_url','photo_url','notes'],
+    'Research Questions': ['question','research_type','status','priority','date_opened','conclusion','next_action','notes'],
+    'Sources': ['name','source_type','repository','url','full_citation','short_citation','date_of_source','date_accessed','notes','source_file_url'],
+    'Research Log': ['title','date','summary','notes'],
   };
   return (fieldMap[table] || []).map(name => ({ name }));
 }
