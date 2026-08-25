@@ -970,13 +970,13 @@ async function confirmMerge(keepId, deleteId, name) {
 }
 
 // ── Field helpers (maps your actual Airtable field names) ─────────────────────
-function personName(a)     { return a['Full Name ★'] || a.Name || 'Unknown'; }
-function personPhoto(a)    { return a['Photo URL'] || a.Photo?.[0]?.thumbnails?.large?.url || a.Photo?.[0]?.url || null; }
-function personBirth(a)    { return a['Birth Date'] || ''; }
-function personDeath(a)    { return a['Death Date'] || ''; }
-function personPlace(a)    { return a['Birth Place'] || a.Location || ''; }
-function personRelation(a) { return a['Relation to Self'] || ''; }
-function personLine(a)     { return a.Line || ''; }
+function personName(a)     { return a.full_name || a['Full Name ★'] || a.Name || 'Unknown'; }
+function personPhoto(a)    { return a.photo_url || a['Photo URL'] || a.Photo?.[0]?.thumbnails?.large?.url || a.Photo?.[0]?.url || null; }
+function personBirth(a)    { return a.birth_date || a['Birth Date'] || ''; }
+function personDeath(a)    { return a.death_date || a['Death Date'] || ''; }
+function personPlace(a)    { return a.birth_place || a['Birth Place'] || a.Location || ''; }
+function personRelation(a) { return a.relation_to_self || a['Relation to Self'] || ''; }
+function personLine(a)     { return a.line || a.Line || ''; }
 
 function renderAncestorCards(ancestors, containerId) {
   const container = document.getElementById(containerId);
