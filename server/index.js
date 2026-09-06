@@ -27,6 +27,7 @@ const db        = require('./db-mysql');
 const anthropic = require('./anthropic');
 const { hashPassword, checkPassword, signToken, verifyToken, requireAuth } = require('./auth');
 const { buildGedcomIndex, computeRelationships } = require('./relationships');
+const { uploadToNAS } = require('./nas');
 const { searchAllArchives } = require('./archives-search');
 
 // ── GEDCOM cache ───────────────────────────────────────────────────────────────
@@ -576,10 +577,21 @@ app.get('/api/ancestors', async (req, res) => {
 
 app.get('/api/ancestor/:id', async (req, res) => {
   try {
-    const profile = await db.getAncestorProfile(req.user.userId, req.params.id);
-    if (!profile) return res.status(404).json({ error: 'Not found.' });
+    const ancestor = await db.getAncestorProfile(req.user.userId, req.params.id);
+    if (!ancestor) return res.status(404).json({ error: 'Not found.' });
     const relationships = await getRelationshipsFor(req.user.userId, req.params.id);
-    res.json({ ...profile, relationships });
+    res.json({
+      ancestor,
+      relationships,
+      questions: [],
+      sources: [],
+      evidence: [],
+      dnaTests: [],
+      dnaMatches: [],
+      archives: [],
+      collections: [],
+      researchLog: [],
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -779,20 +791,30 @@ app.post('/api/metadata', upload.single('image'), async (req, res) => {
 });
 
 // ── File uploads ───────────────────────────────────────────────────────────────
-app.post('/api/upload-archive-image', uploadArchiveImage.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/archives/${req.file.filename}` });
-});
-
-app.post('/api/upload-person-photo', uploadPersonPhoto.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/people/${req.file.filename}` });
-});
-
-app.post('/api/upload-source-file', uploadSourceFile.single('image'), async (req, res) => {
+// Shared upload handler: tries NAS first, falls back to local disk URL.
+// multer disk storage already wrote the file; read it back for NAS upload.
+async function handleUpload(req, res, localPath) {
   if (!req.file) return res.status(400).json({ error: 'No file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/sources/${req.file.filename}` });
-});
+  if (process.env.NAS_PASS) {
+    try {
+      const buffer = fs.readFileSync(req.file.path);
+      const nasUrl = await uploadToNAS(req.file.filename, buffer, req.file.mimetype);
+      return res.json({ ok: true, imageUrl: nasUrl, storage: 'nas' });
+    } catch (err) {
+      console.error('NAS upload failed, falling back to local:', err.message);
+    }
+  }
+  res.json({ ok: true, imageUrl: localPath, storage: 'local' });
+}
+
+app.post('/api/upload-archive-image', uploadArchiveImage.single('image'), (req, res) =>
+  handleUpload(req, res, `/uploads/u${req.user.userId}/archives/${req.file && req.file.filename}`));
+
+app.post('/api/upload-person-photo', uploadPersonPhoto.single('image'), (req, res) =>
+  handleUpload(req, res, `/uploads/u${req.user.userId}/people/${req.file && req.file.filename}`));
+
+app.post('/api/upload-source-file', uploadSourceFile.single('image'), (req, res) =>
+  handleUpload(req, res, `/uploads/u${req.user.userId}/sources/${req.file && req.file.filename}`));
 
 app.post('/api/save-archive', async (req, res) => {
   try {
