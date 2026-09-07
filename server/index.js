@@ -28,6 +28,7 @@ const anthropic = require('./anthropic');
 const { hashPassword, checkPassword, signToken, verifyToken, requireAuth } = require('./auth');
 const { buildGedcomIndex, computeRelationships } = require('./relationships');
 const { searchAllArchives } = require('./archives-search');
+const { pushToNAS } = require('./nas-ftp');
 
 // ── GEDCOM cache ───────────────────────────────────────────────────────────────
 const GEDCOM_MAP_FILE  = path.join(__dirname, 'gedcom-map.json');
@@ -781,17 +782,23 @@ app.post('/api/metadata', upload.single('image'), async (req, res) => {
 // ── File uploads ───────────────────────────────────────────────────────────────
 app.post('/api/upload-archive-image', uploadArchiveImage.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/archives/${req.file.filename}` });
+  const relPath = `u${req.user.userId}/archives/${req.file.filename}`;
+  res.json({ ok: true, imageUrl: `/uploads/${relPath}` });
+  pushToNAS(req.file.path, relPath); // best-effort, after the response — never blocks the upload
 });
 
 app.post('/api/upload-person-photo', uploadPersonPhoto.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/people/${req.file.filename}` });
+  const relPath = `u${req.user.userId}/people/${req.file.filename}`;
+  res.json({ ok: true, imageUrl: `/uploads/${relPath}` });
+  pushToNAS(req.file.path, relPath);
 });
 
 app.post('/api/upload-source-file', uploadSourceFile.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file provided.' });
-  res.json({ ok: true, imageUrl: `/uploads/u${req.user.userId}/sources/${req.file.filename}` });
+  const relPath = `u${req.user.userId}/sources/${req.file.filename}`;
+  res.json({ ok: true, imageUrl: `/uploads/${relPath}` });
+  pushToNAS(req.file.path, relPath);
 });
 
 app.post('/api/save-archive', async (req, res) => {

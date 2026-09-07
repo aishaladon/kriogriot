@@ -1,3 +1,8 @@
+> **Superseded by `NAS-FTPS.md`.** The app now pushes each upload to the NAS
+> over FTPS as it happens, instead of the NAS pulling nightly as described
+> below. Left here for reference; don't set up the scheduled rsync task
+> described in this file unless you're deliberately reverting to it.
+
 # Mirroring Krio Griot media to the Synology NAS
 
 Goal: every scanned image uploaded to kriogriot.com is copied to the NAS at

@@ -50,6 +50,7 @@ hPanel → **Environment variables**:
 | `UPLOAD_DIR` | **Must be set** to `/home/u106934582/domains/kriogriot.com/media` |
 | `SMTP_*` | Resend, used for welcome and password-reset mail |
 | `GEDCOM_OWNER_USER_ID` | Optional. The one account allowed to see the bundled GEDCOM tree |
+| `NAS_FTP_HOST` / `NAS_FTP_PORT` / `NAS_FTP_USER` / `NAS_FTP_PASSWORD` / `NAS_FTP_BASE_DIR` | Optional — see `NAS-FTPS.md`. Unset means uploads are simply not mirrored to the NAS; nothing else breaks. |
 
 ### Why `UPLOAD_DIR` matters
 
