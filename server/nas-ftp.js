@@ -10,11 +10,23 @@ const ftp  = require('basic-ftp');
 const path = require('path');
 const fs   = require('fs');
 
-const NAS_HOST     = process.env.NAS_FTP_HOST;
-const NAS_PORT     = process.env.NAS_FTP_PORT ? Number(process.env.NAS_FTP_PORT) : 21;
-const NAS_USER     = process.env.NAS_FTP_USER;
-const NAS_PASSWORD = process.env.NAS_FTP_PASSWORD;
-const NAS_BASE_DIR = process.env.NAS_FTP_BASE_DIR || '/site-media';
+// NAS_HOST may be a bare hostname or a full ftps://host:port URL (that's how
+// it's set in hPanel) — accept either rather than requiring one exact shape.
+function parseHost(raw) {
+  if (!raw) return { host: undefined, port: 21 };
+  const withScheme = raw.includes('://') ? raw : `ftps://${raw}`;
+  try {
+    const u = new URL(withScheme);
+    return { host: u.hostname, port: u.port ? Number(u.port) : 21 };
+  } catch {
+    return { host: raw, port: 21 };
+  }
+}
+
+const { host: NAS_HOST, port: NAS_PORT } = parseHost(process.env.NAS_HOST);
+const NAS_USER     = process.env.NAS_USER;
+const NAS_PASSWORD = process.env.NAS_PASS;
+const NAS_BASE_DIR = process.env.NAS_FOLDER || '/';
 
 const nasConfigured = Boolean(NAS_HOST && NAS_USER && NAS_PASSWORD);
 
@@ -38,7 +50,7 @@ function logFailure(remoteRelPath, reason) {
 }
 
 if (!nasConfigured) {
-  console.warn('NAS FTPS not configured (set NAS_FTP_HOST / NAS_FTP_USER / NAS_FTP_PASSWORD) — uploads will not be mirrored to the NAS.');
+  console.warn('NAS FTPS not configured (set NAS_HOST / NAS_USER / NAS_PASS) — uploads will not be mirrored to the NAS.');
 }
 
 // remoteRelPath is forward-slash, e.g. "u12/archives/171234-abcd.jpg".

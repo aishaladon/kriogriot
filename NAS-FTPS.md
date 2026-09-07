@@ -34,7 +34,7 @@ Control Panel → **File Services** → **FTP**:
 
 Control Panel → **Shared Folder**, or reuse an existing one, and give the FTP
 user read/write access to it. This shared folder's path is the FTP root —
-`NAS_FTP_BASE_DIR` is relative to it, not to `/volume1/...`.
+`NAS_FOLDER` is relative to it, not to `/volume1/...`.
 
 Control Panel → **User & Group** → create a **dedicated account** for this
 (don't reuse your own admin login) — e.g. `krio-griot-uploader` — scoped to
@@ -56,15 +56,15 @@ LAN will fail exactly the same way as no port-forward at all.
 
 | Variable | Value |
 |---|---|
-| `NAS_FTP_HOST` | `LegacyArchives.synology.me` |
-| `NAS_FTP_PORT` | `277` |
-| `NAS_FTP_USER` | the dedicated FTP account's username |
-| `NAS_FTP_PASSWORD` | its password |
-| `NAS_FTP_BASE_DIR` | the FTP-root-relative path files should land under (default `/site-media` if unset) |
+| `NAS_HOST` | a bare hostname or a full `ftps://host:port` URL — currently `ftps://legacyarchives.synology.me:277` |
+| `NAS_USER` | the dedicated FTP account's username — currently `kriogriot` |
+| `NAS_PASS` | its password |
+| `NAS_FOLDER` | the FTP-root-relative path files should land under (default `/` if unset) — currently `/` |
 
-Restart the app after adding these. Files will arrive under
-`<NAS_FTP_BASE_DIR>/u<accountId>/archives|people|sources/...` — same
-per-account layout the site already uses under `UPLOAD_DIR`.
+These four are already set in hPanel for kriogriot.com. Restart the app after
+changing any of them. Files arrive under
+`<NAS_FOLDER>/u<accountId>/archives|people|sources/...` — same per-account
+layout the site already uses under `UPLOAD_DIR`.
 
 ## Verifying it's actually working
 
@@ -83,3 +83,10 @@ Startup also logs a warning if the env vars aren't set at all —
 If you don't see that line, the app thinks it's configured; if uploads still
 aren't showing up on the NAS, it's a connectivity or permissions problem,
 not a missing-config one.
+
+**Current status (as of this check):** the four env vars above are already
+set in hPanel. Testing a real connection to `legacyarchives.synology.me:277`
+from outside your network returned `ECONNREFUSED` — nothing is answering on
+that port publicly yet, so every push will fail with that reason until
+Steps 1–2 (FTPS enabled on the Synology, both ports forwarded on the router)
+are actually done. That's a NAS/router-side gap, not a code or hPanel one.
