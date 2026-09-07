@@ -27,7 +27,7 @@ const db        = require('./db-mysql');
 const anthropic = require('./anthropic');
 const { hashPassword, checkPassword, signToken, verifyToken, requireAuth } = require('./auth');
 const { buildGedcomIndex, computeRelationships } = require('./relationships');
-const { uploadToNAS } = require('./nas');
+const { pushToNAS } = require('./nas');
 const { searchAllArchives } = require('./archives-search');
 
 // ── GEDCOM cache ───────────────────────────────────────────────────────────────
@@ -791,20 +791,14 @@ app.post('/api/metadata', upload.single('image'), async (req, res) => {
 });
 
 // ── File uploads ───────────────────────────────────────────────────────────────
-// Shared upload handler: tries NAS first, falls back to local disk URL.
-// multer disk storage already wrote the file; read it back for NAS upload.
-async function handleUpload(req, res, localPath) {
+// Shared upload handler: multer disk storage already wrote the file, so the
+// site always serves its own local copy — the NAS push below is a best-effort
+// mirror that runs after the response and never affects what gets served.
+function handleUpload(req, res, localPath) {
   if (!req.file) return res.status(400).json({ error: 'No file provided.' });
-  if (process.env.NAS_PASS) {
-    try {
-      const buffer = fs.readFileSync(req.file.path);
-      const nasUrl = await uploadToNAS(req.file.filename, buffer, req.file.mimetype);
-      return res.json({ ok: true, imageUrl: nasUrl, storage: 'nas' });
-    } catch (err) {
-      console.error('NAS upload failed, falling back to local:', err.message);
-    }
-  }
   res.json({ ok: true, imageUrl: localPath, storage: 'local' });
+  const remoteRelPath = localPath.replace(/^\/uploads\//, '');
+  pushToNAS(req.file.path, remoteRelPath);
 }
 
 app.post('/api/upload-archive-image', uploadArchiveImage.single('image'), (req, res) =>
