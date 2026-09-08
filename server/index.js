@@ -41,6 +41,18 @@ function gedcomOwnerId() {
   return id ? String(id).trim() : null;
 }
 
+// Mango leads (name/email/phone from prospective customers) are only for the
+// site owner to see. requireAuth alone just checks *some* account is logged
+// in — every registered user could read and edit every other lead. Fails
+// closed: unset ADMIN_EMAIL means no one gets admin routes, not everyone.
+function requireAdmin(req, res, next) {
+  const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  if (!adminEmail || !req.user || (req.user.email || '').toLowerCase() !== adminEmail) {
+    return res.status(403).json({ error: 'Admin access required.' });
+  }
+  next();
+}
+
 function loadGedcomCache() {
   if (_gedcomCache) return _gedcomCache;
   if (!fs.existsSync(GEDCOM_MAP_FILE) || !fs.existsSync(GEDCOM_DATA_FILE)) return null;
@@ -855,7 +867,7 @@ app.post('/api/family-tree/reload', (req, res) => {
 });
 
 // ── Mango admin ───────────────────────────────────────────────────────────────
-app.patch('/api/mango/:id', async (req, res) => {
+app.patch('/api/mango/:id', requireAdmin, async (req, res) => {
   const { status } = req.body || {};
   const allowed = ['new','researching','sent','no reply'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
@@ -865,7 +877,7 @@ app.patch('/api/mango/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/mango', requireAuth, async (req, res) => {
+app.get('/api/mango', requireAuth, requireAdmin, async (req, res) => {
   try {
     const rows = await db.mangoList({ status: req.query.status, q: req.query.q });
     res.json({ ok: true, rows });
