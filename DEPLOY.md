@@ -9,14 +9,38 @@ and that is deliberate — see "Why there is no CI deploy" below.
    the repo minus `node_modules`, `.git`, `.env`, and `uploads`. The folder name
    matters: it becomes the app's Root directory in hPanel.
 
-   From a clean checkout on Windows:
+   **Do not use PowerShell's `Compress-Archive`** to build it — it writes
+   Windows-style backslashes into the zip's internal entry paths
+   (`kriogriot-main\server\index.js` instead of `kriogriot-main/server/index.js`).
+   Hostinger's Linux-based unzip can't parse that and fails with "unsupported
+   framework or invalid project structure," with no indication the zip's
+   internal path separators are the actual cause.
+
+   From a clean checkout on Windows, stage the files with robocopy, then zip
+   with Python's `zipfile` (ships with Python; always writes forward slashes
+   regardless of OS):
 
    ```powershell
    $stage = "$env:TEMP\kriogriot-main"
    Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
-   robocopy . $stage /E /XD node_modules .git .claude mysql-export uploads /XF .env
-   Compress-Archive -Path $stage -DestinationPath "$env:TEMP\kriogriot-main.zip" -Force
+   robocopy . $stage /E /XD node_modules .git .claude mysql-export uploads /XF .env gedcom-data.json gedcom-map.json
+   python -c "
+   import os, zipfile
+   src, dest, top = r'$stage', r'$env:TEMP\kriogriot-main.zip', 'kriogriot-main'
+   if os.path.exists(dest): os.remove(dest)
+   with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as zf:
+       for root, dirs, files in os.walk(src):
+           for f in files:
+               full = os.path.join(root, f)
+               arc = top + '/' + os.path.relpath(full, src).replace('\\\\', '/')
+               zf.write(full, arc)
+   "
    ```
+
+   Note `gedcom-data.json` and `gedcom-map.json` are also excluded here —
+   they're gitignored family PII (see below) and must never travel through a
+   general-purpose deploy zip; upload them by hand only when the GEDCOM
+   feature is specifically wanted.
 
 2. hPanel → your site → **Deployments** → **Redeploy** → upload the zip.
 
