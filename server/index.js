@@ -169,10 +169,14 @@ async function sendEmail({ to, subject, html }) {
 
   // Fall back to nodemailer for other SMTP providers
   const nodemailer = require('nodemailer');
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
   const mailer = nodemailer.createTransport({
     host:   process.env.SMTP_HOST || 'smtp.hostinger.com',
-    port:   Number(process.env.SMTP_PORT || 587),
-    secure: false,
+    port:   smtpPort,
+    // 465 is implicit TLS from the first byte; 587/25 start plaintext and
+    // upgrade via STARTTLS. Getting this backwards drops the connection
+    // ("unexpected socket close") before nodemailer ever sends a command.
+    secure: smtpPort === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
   try {
