@@ -53,6 +53,16 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+// Same admin gate, but also accepts the ADMIN_KEY header — the same
+// credential registration already uses for privileged actions with no
+// logged-in owner session. Lets destructive cleanup routes (delete a lead,
+// delete a stray account) be run without first logging in as the owner.
+function requireAdminOrKey(req, res, next) {
+  const adminKey = process.env.ADMIN_KEY;
+  if (adminKey && req.headers['x-admin-key'] === adminKey) return next();
+  requireAdmin(req, res, next);
+}
+
 function loadGedcomCache() {
   if (_gedcomCache) return _gedcomCache;
   if (!fs.existsSync(GEDCOM_MAP_FILE) || !fs.existsSync(GEDCOM_DATA_FILE)) return null;
@@ -121,6 +131,21 @@ function makeDiskUploader(subdir) {
 const uploadArchiveImage = makeDiskUploader('archives');
 const uploadPersonPhoto  = makeDiskUploader('people');
 const uploadSourceFile   = makeDiskUploader('sources');
+
+// Deletes the local copy of a file previously served under /uploads/...,
+// given the URL stored on a now-deleted record. Best-effort: a record
+// missing its file, or a file already gone, is not an error worth failing
+// the delete over. Leaves any NAS-mirrored copy alone — see FILE_URL_COLUMN
+// in db-mysql.js for why.
+function deleteLocalUploadFile(fileUrl) {
+  if (!fileUrl || !fileUrl.startsWith('/uploads/')) return;
+  const rel = fileUrl.slice('/uploads/'.length);
+  const full = path.join(UPLOAD_ROOT, rel);
+  if (!full.startsWith(UPLOAD_ROOT)) return; // guard against a malformed path escaping the upload root
+  fs.unlink(full, (err) => {
+    if (err && err.code !== 'ENOENT') console.warn(`Could not delete local file ${full}: ${err.message}`);
+  });
+}
 
 // ── Middleware ─────────────────────────────────────────────────────────────────
 app.use(cors());
@@ -547,6 +572,27 @@ Request #${rowId}`;
   }
 });
 
+// These two are destructive owner-only actions with no natural logged-in
+// moment (deleting spam/a leftover test account), so — like registration —
+// they accept the ADMIN_KEY header as well as an owner session, and so sit
+// before the blanket requireAuth below rather than depend on it.
+app.delete('/api/mango/:id', requireAdminOrKey, async (req, res) => {
+  try {
+    const removed = await db.mangoDelete(req.params.id);
+    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/admin/user/:id', requireAdminOrKey, async (req, res) => {
+  try {
+    const { affectedRows, fileUrls } = await db.deleteUserAccount(req.params.id);
+    if (affectedRows === 0) return res.status(404).json({ error: 'Account not found.' });
+    fileUrls.forEach(deleteLocalUploadFile);
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ── All routes below require auth ──────────────────────────────────────────────
 app.use('/api', requireAuth);
 
@@ -615,8 +661,9 @@ app.get('/api/ancestor/:id', async (req, res) => {
 
 app.delete('/api/ancestor/:id', async (req, res) => {
   try {
-    const removed = await db.deletePerson(req.user.userId, req.params.id);
-    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
+    const { affectedRows, fileUrl } = await db.deletePerson(req.user.userId, req.params.id);
+    if (affectedRows === 0) return res.status(404).json({ error: 'Record not found.' });
+    deleteLocalUploadFile(fileUrl);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -624,7 +671,17 @@ app.delete('/api/ancestor/:id', async (req, res) => {
 });
 
 app.post('/api/merge-ancestors', async (req, res) => {
-  res.json({ ok: true, merged: {} });
+  const { keepId, deleteId } = req.body || {};
+  if (!keepId || !deleteId) return res.status(400).json({ error: 'keepId and deleteId are required.' });
+  try {
+    const { fieldsMerged, fileUrl } = await db.mergePeople(req.user.userId, keepId, deleteId);
+    // If photo_url was itself one of the merged fields, keepId's row now
+    // points at this same file — deleting it would break keepId's photo too.
+    if (!fieldsMerged.includes('photo_url')) deleteLocalUploadFile(fileUrl);
+    res.json({ ok: true, merged: { fieldsMerged } });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // ── Relationships ──────────────────────────────────────────────────────────────
@@ -726,8 +783,9 @@ app.patch('/api/record/:table/:id', async (req, res) => {
 
 app.delete('/api/record/:table/:id', async (req, res) => {
   try {
-    const removed = await db.deleteAnyRecord(req.user.userId, req.params.table, req.params.id);
-    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
+    const { affectedRows, fileUrl } = await db.deleteAnyRecord(req.user.userId, req.params.table, req.params.id);
+    if (affectedRows === 0) return res.status(404).json({ error: 'Record not found.' });
+    deleteLocalUploadFile(fileUrl);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

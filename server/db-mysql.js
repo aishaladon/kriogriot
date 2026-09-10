@@ -155,8 +155,86 @@ async function updatePerson(userId, personId, fields) {
 }
 
 async function deletePerson(userId, personId) {
+  const [rows] = await pool().execute('SELECT photo_url FROM people WHERE id = ? AND user_id = ?', [personId, userId]);
   const [res] = await pool().execute('DELETE FROM people WHERE id = ? AND user_id = ?', [personId, userId]);
-  return res.affectedRows;
+  return { affectedRows: res.affectedRows, fileUrl: rows[0]?.photo_url || null };
+}
+
+// Merges keepId and deleteId: any field empty on keepId is filled from
+// deleteId (existing data on keepId is never overwritten), every
+// family_connections row referencing deleteId is re-pointed at keepId, and
+// deleteId is removed. There is no person_id on Research Questions/Sources/
+// DNA/Archives/Collections — they're user-scoped only, not per-person — so
+// there is nothing to reassign there.
+async function mergePeople(userId, keepId, deleteId) {
+  if (String(keepId) === String(deleteId)) throw new Error('Cannot merge a record with itself.');
+
+  const [[keepRow], [deleteRow]] = await Promise.all([
+    q('SELECT * FROM people WHERE id = ? AND user_id = ?', [keepId, userId]),
+    q('SELECT * FROM people WHERE id = ? AND user_id = ?', [deleteId, userId]),
+  ]);
+  if (!keepRow) throw new Error('Record to keep not found.');
+  if (!deleteRow) throw new Error('Record to merge not found.');
+
+  const fieldsMerged = [];
+  const sets = [], vals = [];
+  for (const col of CLIENT_ALIASES['People']) {
+    const keepEmpty   = keepRow[col] === null || keepRow[col] === '';
+    const deleteFilled = deleteRow[col] !== null && deleteRow[col] !== '';
+    if (keepEmpty && deleteFilled) {
+      sets.push(`${col} = ?`);
+      vals.push(deleteRow[col]);
+      fieldsMerged.push(col);
+    }
+  }
+  if (sets.length) {
+    vals.push(keepId, userId);
+    await pool().execute(`UPDATE people SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`, vals);
+  }
+
+  // Anyone whose parent was deleteId now points at keepId.
+  await pool().execute(
+    'UPDATE family_connections SET father_id = ? WHERE user_id = ? AND father_id = ?',
+    [keepId, userId, deleteId]
+  );
+  await pool().execute(
+    'UPDATE family_connections SET mother_id = ? WHERE user_id = ? AND mother_id = ?',
+    [keepId, userId, deleteId]
+  );
+
+  // deleteId's own parent row (it as a child) needs to move to keepId too —
+  // but child_id is unique per user, so if keepId already has one, fold the
+  // two rows together (fill gaps only) instead of a plain re-point.
+  const [deleteAsChild] = await q(
+    'SELECT father_id, mother_id FROM family_connections WHERE user_id = ? AND child_id = ?',
+    [userId, deleteId]
+  );
+  if (deleteAsChild) {
+    const [keepAsChild] = await q(
+      'SELECT father_id, mother_id FROM family_connections WHERE user_id = ? AND child_id = ?',
+      [userId, keepId]
+    );
+    if (!keepAsChild) {
+      await pool().execute(
+        'UPDATE family_connections SET child_id = ? WHERE user_id = ? AND child_id = ?',
+        [keepId, userId, deleteId]
+      );
+    } else {
+      await pool().execute(
+        `UPDATE family_connections
+         SET father_id = COALESCE(father_id, ?), mother_id = COALESCE(mother_id, ?)
+         WHERE user_id = ? AND child_id = ?`,
+        [deleteAsChild.father_id, deleteAsChild.mother_id, userId, keepId]
+      );
+      await pool().execute(
+        'DELETE FROM family_connections WHERE user_id = ? AND child_id = ?',
+        [userId, deleteId]
+      );
+    }
+  }
+
+  const { fileUrl } = await deletePerson(userId, deleteId);
+  return { fieldsMerged, fileUrl };
 }
 
 // ── Family connections ─────────────────────────────────────────────────────────
@@ -409,14 +487,32 @@ async function updateAnyRecord(userId, table, id, fields) {
   return res.affectedRows;
 }
 
+// Tables whose rows can hold a file this app itself served — the column to
+// read before deleting, so the caller can clean up the file on local disk.
+// NAS-mirrored copies are left alone: they're the archival copy, and this
+// project's stated policy is that the sync only ever adds (see NAS-SYNC.md).
+const FILE_URL_COLUMN = {
+  'Sources': 'source_file_url', 'Archives': 'image_url', 'Collections': 'image_url',
+};
+
 async function deleteAnyRecord(userId, table, id) {
   if (table === 'People') return deletePerson(userId, id);
   const sqlTable = TABLE_SQL[table];
   if (!sqlTable) throw new Error(`Unknown table: ${table}`);
+
+  let fileUrl = null;
+  const fileCol = FILE_URL_COLUMN[table];
+  if (fileCol) {
+    const [rows] = await pool().execute(
+      `SELECT \`${fileCol}\` AS url FROM \`${sqlTable}\` WHERE id = ? AND user_id = ?`, [id, userId]
+    );
+    fileUrl = rows[0]?.url || null;
+  }
+
   const [res] = await pool().execute(
     `DELETE FROM \`${sqlTable}\` WHERE id = ? AND user_id = ?`, [id, userId]
   );
-  return res.affectedRows;
+  return { affectedRows: res.affectedRows, fileUrl };
 }
 
 async function getTableFields(table) {
@@ -467,6 +563,11 @@ async function mangoSetStatus(id, status) {
   await pool().execute('UPDATE mango_requests SET status=? WHERE id=?', [status, id]);
 }
 
+async function mangoDelete(id) {
+  const [res] = await pool().execute('DELETE FROM mango_requests WHERE id=?', [id]);
+  return res.affectedRows;
+}
+
 async function mangoList({ status, q: search } = {}) {
   let sql = 'SELECT * FROM mango_requests WHERE 1=1';
   const params = [];
@@ -481,11 +582,35 @@ async function ping() {
   return rows[0].ok === 1;
 }
 
+// Removes an account and everything scoped to it. Returns the file URLs
+// that were on its records so the caller can clean those up on disk too —
+// mirrors the same local-file cleanup used for single-record deletes.
+async function deleteUserAccount(userId) {
+  const [people, sources, archives, collections] = await Promise.all([
+    q('SELECT photo_url AS url FROM people WHERE user_id = ? AND photo_url IS NOT NULL', [userId]),
+    q('SELECT source_file_url AS url FROM sources WHERE user_id = ? AND source_file_url IS NOT NULL', [userId]),
+    q('SELECT image_url AS url FROM archives WHERE user_id = ? AND image_url IS NOT NULL', [userId]),
+    q('SELECT image_url AS url FROM collections WHERE user_id = ? AND image_url IS NOT NULL', [userId]),
+  ]);
+  const fileUrls = [...people, ...sources, ...archives, ...collections].map(r => r.url);
+
+  const userTables = [
+    'family_connections', 'research_questions', 'sources', 'research_log',
+    'dna_testing', 'dna_matches', 'archives', 'collections',
+    'password_reset_tokens', 'people',
+  ];
+  for (const table of userTables) {
+    await pool().execute(`DELETE FROM \`${table}\` WHERE user_id = ?`, [userId]);
+  }
+  const [res] = await pool().execute('DELETE FROM users WHERE id = ?', [userId]);
+  return { affectedRows: res.affectedRows, fileUrls };
+}
+
 module.exports = {
   ping,
-  createUser, getUserByEmail, getUserById, updateUserPassword,
+  createUser, getUserByEmail, getUserById, updateUserPassword, deleteUserAccount,
   storeResetToken, getResetToken, clearResetToken,
-  getAllAncestors, getAncestorProfile, createPerson, updatePerson, deletePerson,
+  getAllAncestors, getAncestorProfile, createPerson, updatePerson, deletePerson, mergePeople,
   saveFamilyConnection, removeFamilyConnection, getFamilyConnections,
   getFamilyTreeData,
   getAllQuestions, saveQuestion,
@@ -499,6 +624,5 @@ module.exports = {
   createAnyRecord, updateAnyRecord, deleteAnyRecord, getTableFields,
   saveAncestor,
   deleteRecord: (table, id, userId) => deletePerson(userId, id),
-  mergeAncestors: async () => ({}),
-  mangoInsert, mangoUpdate, mangoFindByEmail, mangoSetStatus, mangoList,
+  mangoInsert, mangoUpdate, mangoFindByEmail, mangoSetStatus, mangoList, mangoDelete,
 };

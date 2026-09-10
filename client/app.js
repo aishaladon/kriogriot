@@ -3470,17 +3470,6 @@ function closeModalOnOverlay(e) {
   if (e.target === document.getElementById('record-modal')) closeModal();
 }
 
-// ── Profile ───────────────────────────────────────────────────────────────────
-function loadProfile() {
-  const saved = JSON.parse(localStorage.getItem('lr-profile') || '{}');
-  document.getElementById('profile-name').value     = saved.name     || '';
-  document.getElementById('profile-email').value    = saved.email    || '';
-  document.getElementById('profile-username').value = saved.username || '';
-  if (saved.username) {
-    document.getElementById('sidebar-username').textContent = saved.username;
-  }
-}
-
 // ── User auth helpers (localStorage) ─────────────────────────────────────────
 function getUser() {
   try { return JSON.parse(localStorage.getItem('lr_user') || 'null'); } catch { return null; }
@@ -3735,4 +3724,3 @@ loadDashboard();
 initDatabaseCategories();
 initLocationSelector();
 initSidebarProfile();   // populate sidebar from localStorage user
-loadProfile();
