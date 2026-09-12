@@ -613,12 +613,12 @@ function renderAncestorsTable() {
   const { slice: pageItems, page, pages, total } = _pgSlice(allPeopleCache, 'People');
   const rows = pageItems.map(a => {
     const name     = personName(a);
-    const relation = a['Relation to Self'] || '';
-    const sex      = a['Sex'] || '';
-    const bDate    = a['Birth Date'] || '';
-    const bPlace   = a['Birth Place'] || '';
-    const dDate    = a['Death Date'] || '';
-    const dPlace   = a['Death Place'] || '';
+    const relation = a.relation_to_self || '';
+    const sex      = a.sex || '';
+    const bDate    = a.birth_date || '';
+    const bPlace   = a.birth_place || '';
+    const dDate    = a.death_date || '';
+    const dPlace   = a.death_place || '';
     const safeRec  = JSON.stringify(a).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
     return `<tr data-id="${escHtml(a.id)}">
       <td style="font-weight:600;cursor:pointer;" onclick="openProfile('${a.id}')">${escHtml(name)}</td>
@@ -680,33 +680,33 @@ function renderResearchLogTable(entries, personMap, compact = false) {
     return `<div class="empty-state"><div class="empty-icon empty-icon-svg"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div><p>No research log entries yet. Click "+ New Entry" to start tracking.</p></div>`;
   }
   const rows = entries.map(e => {
-    const title    = e['Log Title ★'] || '';
-    const status   = e['Research Status'] || '';
+    const title    = e.title || '';
+    const status   = e.research_status || '';
     const sc       = RL_STATUS_COLORS[status] || RL_STATUS_COLORS['On Hold'];
-    const line     = e['Genealogical Line'] || '';
-    const gen      = e['Generational Line'] || '';
-    const rel      = e['Relationship'] || '';
-    const personIds = Array.isArray(e['Person']) ? e['Person'] : [];
+    const line     = e.genealogical_line || '';
+    const gen      = e.generational_line || '';
+    const rel      = e.relationship || '';
+    const personIds = [];
     const personNamesFromMap = personIds.map(id => personMap[id] || '').filter(Boolean);
-    const checklist = Array.isArray(e['Records Checklist']) ? e['Records Checklist'] : [];
+    const checklist = Array.isArray(e.records_checklist) ? e.records_checklist : [];
     const checkBadges = checklist.slice(0, 3).map(c =>
       `<span style="font-size:.66rem;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;white-space:nowrap;">${escHtml(c)}</span>`
     ).join(' ') + (checklist.length > 3 ? ` <span style="font-size:.68rem;color:var(--muted);">+${checklist.length - 3}</span>` : '');
-    const ancestryUrl = e['Ancestry Profile URL'] || '';
-    const geniUrl     = e['Geni.com Profile URL']  || '';
+    const ancestryUrl = e.ancestry_profile_url || '';
+    const geniUrl     = e.geni_profile_url || '';
     const safeRec     = JSON.stringify(e).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
     return `<tr${!compact ? ` data-id="${escHtml(e.id)}"` : ''}>
-      <td ${!compact ? `data-field="Log Title ★" data-val="${escHtml(title)}"` : ''} style="font-weight:600;min-width:180px;">${escHtml(title)||'—'}</td>
+      <td ${!compact ? `data-field="title" data-val="${escHtml(title)}"` : ''} style="font-weight:600;min-width:180px;">${escHtml(title)||'—'}</td>
       <td style="min-width:110px;">${renderPersonLinks(personIds, personNamesFromMap)}</td>
-      <td ${!compact ? `data-field="Research Status" data-val="${escHtml(status)}"` : ''}>
+      <td ${!compact ? `data-field="research_status" data-val="${escHtml(status)}"` : ''}>
         ${status
           ? `<span style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px;background:${sc.bg};color:${sc.color};white-space:nowrap;">${escHtml(status)}</span>`
           : '<span style="color:var(--muted)">—</span>'}
       </td>
       ${!compact ? `
-      <td data-field="Genealogical Line" data-val="${escHtml(line)}">${escHtml(line)||'—'}</td>
+      <td data-field="genealogical_line" data-val="${escHtml(line)}">${escHtml(line)||'—'}</td>
       <td style="text-align:center;">${escHtml(gen)||'—'}</td>
-      <td data-field="Relationship" data-val="${escHtml(rel)}" style="font-size:.8rem;color:var(--muted);">${escHtml(rel)||'—'}</td>
+      <td data-field="relationship" data-val="${escHtml(rel)}" style="font-size:.8rem;color:var(--muted);">${escHtml(rel)||'—'}</td>
       <td style="min-width:180px;">${checkBadges || '<span style="color:var(--muted);font-size:.78rem;">—</span>'}</td>
       <td style="white-space:nowrap;">
         ${ancestryUrl ? `<a href="${escHtml(ancestryUrl)}" target="_blank" rel="noopener" style="color:var(--accent);display:inline-flex;" title="Ancestry"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
@@ -970,13 +970,13 @@ async function confirmMerge(keepId, deleteId, name) {
 }
 
 // ── Field helpers (maps your actual Airtable field names) ─────────────────────
-function personName(a)     { return a['Full Name ★'] || a.Name || 'Unknown'; }
-function personPhoto(a)    { return a['Photo URL'] || a.Photo?.[0]?.thumbnails?.large?.url || a.Photo?.[0]?.url || null; }
-function personBirth(a)    { return a['Birth Date'] || ''; }
-function personDeath(a)    { return a['Death Date'] || ''; }
-function personPlace(a)    { return a['Birth Place'] || a.Location || ''; }
-function personRelation(a) { return a['Relation to Self'] || ''; }
-function personLine(a)     { return a.Line || ''; }
+function personName(a)     { return a.full_name || a.Name || 'Unknown'; }
+function personPhoto(a)    { return a.photo_url || null; }
+function personBirth(a)    { return a.birth_date || ''; }
+function personDeath(a)    { return a.death_date || ''; }
+function personPlace(a)    { return a.birth_place || a.Location || ''; }
+function personRelation(a) { return a.relation_to_self || ''; }
+function personLine(a)     { return a.line || a.Line || ''; }
 
 function renderAncestorCards(ancestors, containerId) {
   const container = document.getElementById(containerId);
@@ -1046,21 +1046,21 @@ async function openProfile(ancestorId) {
 
     // ── Extended bio fields ─────────────────────────────────────────────────
     const bioRows = [];
-    if (ancestor['Birth Name'])          bioRows.push(['Birth Name',      ancestor['Birth Name']]);
-    if (ancestor['Also Known As'])       bioRows.push(['Also Known As',   ancestor['Also Known As']]);
-    if (ancestor['Sex'])                 bioRows.push(['Sex',             ancestor['Sex']]);
-    if (ancestor['Race/Ethnicity'])      bioRows.push(['Race / Ethnicity',ancestor['Race/Ethnicity']]);
-    if (ancestor['Birth Date'])          bioRows.push(['Birth Date',      ancestor['Birth Date']]);
-    if (ancestor['Birth Place'])         bioRows.push(['Birth Place',     ancestor['Birth Place']]);
-    if (ancestor['Death Date'])          bioRows.push(['Death Date',      ancestor['Death Date']]);
-    if (ancestor['Death Place'])         bioRows.push(['Death Place',     ancestor['Death Place']]);
-    if (ancestor['Burial Place'])        bioRows.push(['Burial Place',    ancestor['Burial Place']]);
-    if (ancestor['Generation Number'])   bioRows.push(['Generation',      ancestor['Generation Number']]);
-    if (ancestor['Line'])                bioRows.push(['Line',            ancestor['Line']]);
-    if (ancestor['Relation to Self'])    bioRows.push(['Relation',        ancestor['Relation to Self']]);
-    if (ancestor['FamilySearch ID'])     bioRows.push(['FamilySearch ID', ancestor['FamilySearch ID']]);
-    if (ancestor['Ancestry Profile URL'])bioRows.push(['Ancestry URL',    `<a href="${escHtml(ancestor['Ancestry Profile URL'])}" target="_blank" rel="noopener" style="color:var(--accent)">Open Profile</a>`]);
-    if (ancestor['Geni Profile URL'])    bioRows.push(['Geni URL',        `<a href="${escHtml(ancestor['Geni Profile URL'])}" target="_blank" rel="noopener" style="color:var(--accent)">Open Profile</a>`]);
+    if (ancestor.birth_name)          bioRows.push(['Birth Name',      ancestor.birth_name]);
+    if (ancestor.also_known_as)       bioRows.push(['Also Known As',   ancestor.also_known_as]);
+    if (ancestor.sex)                 bioRows.push(['Sex',             ancestor.sex]);
+    if (ancestor.race_ethnicity)      bioRows.push(['Race / Ethnicity',ancestor.race_ethnicity]);
+    if (ancestor.birth_date)          bioRows.push(['Birth Date',      ancestor.birth_date]);
+    if (ancestor.birth_place)         bioRows.push(['Birth Place',     ancestor.birth_place]);
+    if (ancestor.death_date)          bioRows.push(['Death Date',      ancestor.death_date]);
+    if (ancestor.death_place)         bioRows.push(['Death Place',     ancestor.death_place]);
+    if (ancestor.burial_place)        bioRows.push(['Burial Place',    ancestor.burial_place]);
+    if (ancestor.generation_number)   bioRows.push(['Generation',      ancestor.generation_number]);
+    if (ancestor.line)                bioRows.push(['Line',            ancestor.line]);
+    if (ancestor.relation_to_self)    bioRows.push(['Relation',        ancestor.relation_to_self]);
+    if (ancestor.family_search_id)    bioRows.push(['FamilySearch ID', ancestor.family_search_id]);
+    if (ancestor.ancestry_profile_url)bioRows.push(['Ancestry URL',    `<a href="${escHtml(ancestor.ancestry_profile_url)}" target="_blank" rel="noopener" style="color:var(--accent)">Open Profile</a>`]);
+    if (ancestor.geni_profile_url)    bioRows.push(['Geni URL',        `<a href="${escHtml(ancestor.geni_profile_url)}" target="_blank" rel="noopener" style="color:var(--accent)">Open Profile</a>`]);
 
     const bioHtml = bioRows.length ? `
       <div class="profile-bio-grid">
@@ -1071,8 +1071,8 @@ async function openProfile(ancestorId) {
           </div>`).join('')}
       </div>` : '';
 
-    const notesHtml = ancestor['Notes']
-      ? `<div class="profile-notes"><strong>Notes:</strong> ${escHtml(ancestor['Notes'])}</div>` : '';
+    const notesHtml = ancestor.notes
+      ? `<div class="profile-notes"><strong>Notes:</strong> ${escHtml(ancestor.notes)}</div>` : '';
 
     const relationshipsHtml = renderRelationshipsPanel(relationships);
 
@@ -1188,16 +1188,16 @@ function renderQuestionsTab(questions) {
   </tr></thead><tbody>` +
     questions.map(q => {
       const gpsItems = [];
-      if (q['Reasonably Exhaustive Search Done '] === true) gpsItems.push('Search Done');
-      if (q['Conflicts Resolved '] === true) gpsItems.push('Conflicts Resolved');
+      if (q.res_done === true || q.res_done === 1) gpsItems.push('Search Done');
+      if (q.conflicts_resolved === true || q.conflicts_resolved === 1) gpsItems.push('Conflicts Resolved');
       const gpsHtml = gpsItems.length
         ? gpsItems.map(g => `<span class="profile-badge profile-badge-green">${escHtml(g)}</span>`).join(' ')
         : '<span style="color:var(--muted)">—</span>';
       return `<tr>
-        <td style="max-width:280px;">${escHtml(q['Research Question ★'] || q['Research Question'] || q.Question || '—')}</td>
-        <td>${escHtml(q.Status || '—')}</td>
-        <td>${escHtml(q.Priority || '—')}</td>
-        <td style="font-size:.82rem;color:var(--muted);max-width:220px;">${escHtml(q['Current Conclusion'] || q.Conclusion || '—')}</td>
+        <td style="max-width:280px;">${escHtml(q.question || '—')}</td>
+        <td>${escHtml(q.status || '—')}</td>
+        <td>${escHtml(q.priority || '—')}</td>
+        <td style="font-size:.82rem;color:var(--muted);max-width:220px;">${escHtml(q.conclusion || '—')}</td>
         <td style="white-space:nowrap;">${gpsHtml}</td>
       </tr>`;
     }).join('') +
@@ -1210,12 +1210,12 @@ function renderResearchLogTab(log) {
     <th>Log Title</th><th>Status</th><th>Line</th><th>Generation</th><th>Relationship</th><th>Notes</th>
   </tr></thead><tbody>` +
     log.map(l => `<tr>
-      <td style="font-weight:600;">${escHtml(l['Log Title ★'] || l['Log Title'] || '—')}</td>
-      <td>${escHtml(l['Research Status'] || '—')}</td>
-      <td>${escHtml(l['Genealogical Line'] || l.Line || '—')}</td>
-      <td>${escHtml(l['Generational Line'] || l.Generation || '—')}</td>
-      <td>${escHtml(l['Relationship'] || '—')}</td>
-      <td style="font-size:.82rem;color:var(--muted);max-width:260px;">${escHtml(l.Notes || '—')}</td>
+      <td style="font-weight:600;">${escHtml(l.title || '—')}</td>
+      <td>${escHtml(l.research_status || '—')}</td>
+      <td>${escHtml(l.genealogical_line || '—')}</td>
+      <td>${escHtml(l.generational_line || '—')}</td>
+      <td>${escHtml(l.relationship || '—')}</td>
+      <td style="font-size:.82rem;color:var(--muted);max-width:260px;">${escHtml(l.notes || '—')}</td>
     </tr>`).join('') +
     `</tbody></table>`;
 }
@@ -1226,15 +1226,15 @@ function renderSourcesTab(sources) {
     <th>Name</th><th>Type</th><th>Citation</th><th>Notes</th>
   </tr></thead><tbody>` +
     sources.map(s => {
-      const url = s['URL'] || s['Source URL'] || s.URL || '';
+      const url = s.url || '';
       const nameHtml = url
-        ? `<a href="${escHtml(url)}" target="_blank" rel="noopener" style="color:var(--accent)">${escHtml(s['Name ★'] || s.Name || '—')}</a>`
-        : escHtml(s['Name ★'] || s.Name || '—');
+        ? `<a href="${escHtml(url)}" target="_blank" rel="noopener" style="color:var(--accent)">${escHtml(s.name || '—')}</a>`
+        : escHtml(s.name || '—');
       return `<tr>
         <td>${nameHtml}</td>
-        <td>${escHtml(s['Source Type'] || s.Type || '—')}</td>
-        <td style="font-size:.8rem;color:var(--muted);max-width:220px;">${escHtml(s['Short Citation'] || s.Citation || '—')}</td>
-        <td style="font-size:.8rem;color:var(--muted);max-width:200px;">${escHtml(s.Notes || '—')}</td>
+        <td>${escHtml(s.source_type || '—')}</td>
+        <td style="font-size:.8rem;color:var(--muted);max-width:220px;">${escHtml(s.short_citation || '—')}</td>
+        <td style="font-size:.8rem;color:var(--muted);max-width:200px;">${escHtml(s.notes || '—')}</td>
       </tr>`;
     }).join('') +
     `</tbody></table>`;
@@ -1246,11 +1246,11 @@ function renderEvidenceTab(evidence) {
     <th>Name</th><th>Evidence Type</th><th>Conclusion</th><th>Reliability</th><th>Notes</th>
   </tr></thead><tbody>` +
     evidence.map(e => `<tr>
-      <td style="font-weight:600;">${escHtml(e['Name ★'] || e.Name || '—')}</td>
-      <td>${escHtml(e['Evidence Type'] || e.Type || '—')}</td>
-      <td style="font-size:.82rem;max-width:240px;">${escHtml(e['Current Conclusion'] || e.Conclusion || e.Summary || '—')}</td>
-      <td>${escHtml(e.Reliability || '—')}</td>
-      <td style="font-size:.8rem;color:var(--muted);max-width:200px;">${escHtml(e.Notes || '—')}</td>
+      <td style="font-weight:600;">${escHtml(e.name || '—')}</td>
+      <td>${escHtml(e.evidence_type || e.Type || '—')}</td>
+      <td style="font-size:.82rem;max-width:240px;">${escHtml(e.conclusion || e.Summary || '—')}</td>
+      <td>${escHtml(e.reliability || '—')}</td>
+      <td style="font-size:.8rem;color:var(--muted);max-width:200px;">${escHtml(e.notes || '—')}</td>
     </tr>`).join('') +
     `</tbody></table>`;
 }
@@ -1261,11 +1261,11 @@ function renderDNATestsTab(tests) {
     <th>Test / Company</th><th>Test Type</th><th>Kit Number</th><th>Status</th><th>Results / Notes</th>
   </tr></thead><tbody>` +
     tests.map(t => `<tr>
-      <td style="font-weight:600;">${escHtml(t['Name ★'] || t.Name || t['Test Company'] || t.Company || '—')}</td>
-      <td>${escHtml(t['Test Type'] || t.Type || '—')}</td>
-      <td style="font-family:monospace;font-size:.82rem;">${escHtml(t['Kit Number'] || t['Kit #'] || '—')}</td>
-      <td>${escHtml(t.Status || '—')}</td>
-      <td style="font-size:.8rem;color:var(--muted);max-width:260px;">${escHtml(t.Notes || t.Results || t.Description || '—')}</td>
+      <td style="font-weight:600;">${escHtml(t.name || t.company || '—')}</td>
+      <td>${escHtml(t.test_type || '—')}</td>
+      <td style="font-family:monospace;font-size:.82rem;">${escHtml(t.kit_number || '—')}</td>
+      <td>${escHtml(t.status || '—')}</td>
+      <td style="font-size:.8rem;color:var(--muted);max-width:260px;">${escHtml(t.notes || '—')}</td>
     </tr>`).join('') +
     `</tbody></table>`;
 }
@@ -1276,11 +1276,11 @@ function renderDNAMatchesTab(matches) {
     <th>Match Name</th><th>Predicted Relationship</th><th>Shared cM</th><th>Platform</th><th>Notes</th>
   </tr></thead><tbody>` +
     matches.map(m => `<tr>
-      <td style="font-weight:600;">${escHtml(m['Match Name ★'] || m['Match Name'] || m.Name || '—')}</td>
-      <td>${escHtml(m['Predicted Relationship'] || m.Relationship || '—')}</td>
-      <td style="font-family:monospace;">${escHtml(String(m['Shared cM'] ?? m.SharedCM ?? m['Shared CM'] ?? '—'))}</td>
-      <td>${escHtml(m.Platform || m.Company || '—')}</td>
-      <td style="font-size:.8rem;color:var(--muted);max-width:260px;">${escHtml(m.Notes || '—')}</td>
+      <td style="font-weight:600;">${escHtml(m.match_name || '—')}</td>
+      <td>${escHtml(m.relationship || '—')}</td>
+      <td style="font-family:monospace;">${escHtml(String(m.shared_cm ?? '—'))}</td>
+      <td>${escHtml(m.company || '—')}</td>
+      <td style="font-size:.8rem;color:var(--muted);max-width:260px;">${escHtml(m.notes || '—')}</td>
     </tr>`).join('') +
     `</tbody></table>`;
 }
@@ -1291,12 +1291,12 @@ function renderArchivesTab(archives) {
     <th>Accession #</th><th>Description</th><th>Format</th><th>Date</th><th>Condition</th><th>Location</th>
   </tr></thead><tbody>` +
     archives.map(a => `<tr>
-      <td style="font-family:monospace;font-size:.82rem;white-space:nowrap;">${escHtml(a['Accession Number ★'] || a['Accession Number'] || '—')}</td>
-      <td style="max-width:260px;font-size:.82rem;">${escHtml(a.Description || a.Title || a.Name || '—')}</td>
-      <td>${escHtml((Array.isArray(a['Formats Included']) ? a['Formats Included'].join(', ') : a['Formats Included']) || a.Format || a.Type || '—')}</td>
-      <td style="white-space:nowrap;">${escHtml(a['Inclusive Dates'] || a['Estimated Date'] || a.Date || '—')}</td>
-      <td>${escHtml(a.Condition || '—')}</td>
-      <td style="font-size:.8rem;color:var(--muted);">${escHtml(a['Box/Folder Reference'] || a.Location || '—')}</td>
+      <td style="font-family:monospace;font-size:.82rem;white-space:nowrap;">${escHtml(a.name || '—')}</td>
+      <td style="max-width:260px;font-size:.82rem;">${escHtml(a.description || '—')}</td>
+      <td>${escHtml((Array.isArray(a.formats_included) ? a.formats_included.join(', ') : a.formats_included) || '—')}</td>
+      <td style="white-space:nowrap;">${escHtml(a.inclusive_dates || '—')}</td>
+      <td>${escHtml(a.condition_state || '—')}</td>
+      <td style="font-size:.8rem;color:var(--muted);">${escHtml(a.storage_type || '—')}</td>
     </tr>`).join('') +
     `</tbody></table>`;
 }
@@ -1307,11 +1307,11 @@ function renderCollectionsTab(collections) {
     <th>Name</th><th>Type</th><th>Description</th><th>Date</th><th>Notes</th>
   </tr></thead><tbody>` +
     collections.map(c => `<tr>
-      <td style="font-weight:600;">${escHtml(c['Name ★'] || c.Name || c.Title || '—')}</td>
-      <td>${escHtml(c.Type || c.Category || c['Item Type'] || '—')}</td>
-      <td style="font-size:.82rem;max-width:240px;">${escHtml(c.Description || '—')}</td>
-      <td style="white-space:nowrap;">${escHtml(c.Date || c['Estimated Date'] || '—')}</td>
-      <td style="font-size:.8rem;color:var(--muted);max-width:200px;">${escHtml(c.Notes || '—')}</td>
+      <td style="font-weight:600;">${escHtml(c.name || '—')}</td>
+      <td>${escHtml(c.status || '—')}</td>
+      <td style="font-size:.82rem;max-width:240px;">${escHtml(c.description || '—')}</td>
+      <td style="white-space:nowrap;">${escHtml(c.date || '—')}</td>
+      <td style="font-size:.8rem;color:var(--muted);max-width:200px;">${escHtml(c.notes || '—')}</td>
     </tr>`).join('') +
     `</tbody></table>`;
 }
@@ -1350,7 +1350,7 @@ function launchResearchForAncestor(ancestorId) {
   document.getElementById('r-name').value      = personName(ancestor);
   document.getElementById('r-birth').value     = personBirth(ancestor);
   document.getElementById('r-location').value  = personPlace(ancestor);
-  document.getElementById('r-relatives').value = ancestor['Known Relatives'] || '';
+  document.getElementById('r-relatives').value = ancestor.known_relatives || '';
   document.getElementById('r-questions').value = '';
   document.getElementById('findings-ancestor-id').textContent = ancestorId;
   document.getElementById('findings-ancestor-input').value    = ancestorId;
@@ -1664,19 +1664,19 @@ function renderQuestionsPage() {
     ? filtered.map(q => {
         const statusCat = categorizeStatus(q.Status);
         const statusColor = { proven:'var(--success)', inprogress:'#efef7e', disproven:'var(--danger)', open:'var(--muted)' }[statusCat] || 'var(--muted)';
-        const qText   = q['Research Question ★'] || q['Research Question'] || q.Name || '';
-        const peopleIds   = Array.isArray(q['People']) ? q['People'] : [];
-        const peopleNames = Array.isArray(q['Name (from People)']) ? q['Name (from People)'] : [];
-        const rtype   = q['Research Type'] || '';
-        const priority= q['Priority'] || '';
-        const status  = q.Status || '';
+        const qText   = q.question || '';
+        const peopleIds   = [];
+        const peopleNames = [];
+        const rtype   = q.research_type || '';
+        const priority= q.priority || '';
+        const status  = q.status || '';
         const safeRec = JSON.stringify(q).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
         return `<tr data-id="${escHtml(q.id)}">
-          <td data-field="Research Question ★" data-val="${escHtml(qText)}" style="max-width:380px;font-size:.86rem;">${escHtml(qText)||'—'}</td>
+          <td data-field="question" data-val="${escHtml(qText)}" style="max-width:380px;font-size:.86rem;">${escHtml(qText)||'—'}</td>
           <td style="font-size:.8rem;">${renderPersonLinks(peopleIds, peopleNames)}</td>
-          <td data-field="Research Type" data-val="${escHtml(rtype)}" style="font-size:.78rem;color:var(--muted);">${escHtml(rtype)||'—'}</td>
-          <td data-field="Priority" data-val="${escHtml(priority)}" style="font-size:.78rem;color:var(--muted);">${escHtml(priority.substring(0,20))||'—'}</td>
-          <td data-field="Status" data-val="${escHtml(status)}"><span style="font-size:.75rem;font-weight:600;color:${statusColor};">${escHtml(status.substring(0,28))}${status.length>28?'…':''}</span></td>
+          <td data-field="research_type" data-val="${escHtml(rtype)}" style="font-size:.78rem;color:var(--muted);">${escHtml(rtype)||'—'}</td>
+          <td data-field="priority" data-val="${escHtml(priority)}" style="font-size:.78rem;color:var(--muted);">${escHtml(priority.substring(0,20))||'—'}</td>
+          <td data-field="status" data-val="${escHtml(status)}"><span style="font-size:.75rem;font-weight:600;color:${statusColor};">${escHtml(status.substring(0,28))}${status.length>28?'…':''}</span></td>
           <td><button class="btn btn-secondary btn-sm" onclick="openEditModal('Research Questions','${q.id}',${safeRec})">Edit</button></td>
         </tr>`;
       }).join('')
@@ -1740,20 +1740,20 @@ function renderSourcesPage() {
 
   const counts = {
     all:        all.length,
-    primary:    all.filter(s => categorizeSrcType(s['Source Type']) === 'primary').length,
-    secondary:  all.filter(s => categorizeSrcType(s['Source Type']) === 'secondary').length,
-    repository: all.filter(s => categorizeSrcType(s['Source Type']) === 'repository').length,
-    dna:        all.filter(s => categorizeSrcType(s['Source Type']) === 'dna').length,
-    found:      all.filter(s => categorizeSrcType(s['Source Type']) === 'found').length,
+    primary:    all.filter(s => categorizeSrcType(s.source_type) === 'primary').length,
+    secondary:  all.filter(s => categorizeSrcType(s.source_type) === 'secondary').length,
+    repository: all.filter(s => categorizeSrcType(s.source_type) === 'repository').length,
+    dna:        all.filter(s => categorizeSrcType(s.source_type) === 'dna').length,
+    found:      all.filter(s => categorizeSrcType(s.source_type) === 'found').length,
     other:      all.filter(s => {
-                  const c = categorizeSrcType(s['Source Type']);
+                  const c = categorizeSrcType(s.source_type);
                   return c === 'other';
                 }).length,
   };
 
   const filteredAllSrc = activeSrcFilter === 'all'
     ? all
-    : all.filter(s => categorizeSrcType(s['Source Type']) === activeSrcFilter);
+    : all.filter(s => categorizeSrcType(s.source_type) === activeSrcFilter);
   const { slice: filtered, page: pgS, pages: pgsS, total: totS } = _pgSlice(filteredAllSrc, 'Sources');
 
   const statCards = [
@@ -1792,20 +1792,20 @@ function renderSourcesPage() {
 
   const tableRows = filtered.length
     ? filtered.map(s => {
-        const name       = s['Name ★'] || s.Name || '—';
-        const srcType    = s['Source Type'] || '';
+        const name       = s.name || '—';
+        const srcType    = s.source_type || '';
         const cat        = categorizeSrcType(srcType);
         const tc         = typeColors[cat] || typeColors.other;
-        const repo       = s['Repository'] || '—';
-        const url        = s['URL'] || s['Source URL'] || '';
-        const recTypes   = Array.isArray(s['Record Type']) ? s['Record Type'] : [];
-        const searchSt   = s['Search Status'] || '';
+        const repo       = s.repository || '—';
+        const url        = s.url || '';
+        const recTypes   = Array.isArray(s.record_type) ? s.record_type : [];
+        const searchSt   = s.search_status || '';
         const sStyle     = SEARCH_STATUS_STYLE[searchSt] || { bg:'var(--surface2)', color:'var(--muted)' };
-        const shortCite  = s['Short Citation'] || '—';
-        const fileUrl    = s['Source File URL'] || '';
+        const shortCite  = s.short_citation || '—';
+        const fileUrl    = s.source_file_url || '';
         const safeRec    = JSON.stringify(s).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
         return `<tr data-id="${escHtml(s.id)}">
-          <td data-field="Name ★" data-val="${escHtml(s['Name ★']||s.Name||'')}" style="font-weight:600;max-width:260px;">
+          <td data-field="name" data-val="${escHtml(s.name||'')}" style="font-weight:600;max-width:260px;">
             ${url
               ? `<a href="${escHtml(url)}" target="_blank" rel="noopener"
                    style="color:var(--accent);text-decoration:none;"
@@ -1896,16 +1896,15 @@ function renderDNAPage(testing, matches) {
 
   const renderTestingRows = testingPage.length
     ? testingPage.map(d => {
-        const label   = d['Test Label ★'] || d['Name ★'] || d.Name || '';
-        const company = d['Company'] || d['Testing Company'] || '';
-        const type    = d['Test Type'] || '';
-        const haplo   = d['Haplogroup'] || '';
-        const notes   = d['Analysis Notes'] || d['Notes'] || '';
-        const subject = Array.isArray(d['Full Name ★ (from Test Subject)'])
-          ? d['Full Name ★ (from Test Subject)'].join(', ') : '';
+        const label   = d.name || '';
+        const company = d.company || '';
+        const type    = d.test_type || '';
+        const haplo   = d.haplogroup || '';
+        const notes   = d.analysis_notes || d.notes || '';
+        const subject = '';
         const safeRec = JSON.stringify(d).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
         return `<tr data-id="${escHtml(d.id)}">
-          <td data-field="Test Label ★" data-val="${escHtml(label)}" style="font-weight:600;">${escHtml(label)||'—'}</td>
+          <td data-field="name" data-val="${escHtml(label)}" style="font-weight:600;">${escHtml(label)||'—'}</td>
           <td style="font-size:.8rem;color:var(--muted);">${escHtml(subject)||'—'}</td>
           <td data-field="Company" data-val="${escHtml(company)}">${escHtml(company)||'—'}</td>
           <td data-field="Test Type" data-val="${escHtml(type)}" style="font-size:.82rem;">${escHtml(type)||'—'}</td>
@@ -1927,31 +1926,29 @@ function renderDNAPage(testing, matches) {
 
   const renderMatchRows = matchesPage.length
     ? matchesPage.map(m => {
-        const name        = m['Match Name ★'] || '';
-        const sharedCm    = m['Shared cM']    != null ? String(m['Shared cM'])    : '';
-        const sharedSeg   = m['Shared Segments'] != null ? String(m['Shared Segments']) : '';
-        const longestSeg  = m['Longest Segment'] != null ? String(m['Longest Segment']) : '';
-        const predRel     = m['Predicted Relationship']      || '';
-        const likelyRel   = m['Likely Actual Relationship']  || '';
-        const cluster     = m['Clustering Group']            || '';
-        const corrStatus  = m['Correspondence Status']       || '';
+        const name        = m.match_name || '';
+        const sharedCm    = m.shared_cm    != null ? String(m.shared_cm)    : '';
+        const sharedSeg   = m.shared_segments != null ? String(m.shared_segments) : '';
+        const longestSeg  = m.longest_segment != null ? String(m.longest_segment) : '';
+        const predRel     = m.relationship      || '';
+        const likelyRel   = m.likely_relationship  || '';
+        const cluster     = m.clustering_group     || '';
+        const corrStatus  = m.correspondence_status || '';
         const cs          = CORR_STATUS_STYLE[corrStatus] || { bg:'var(--surface2)', color:'var(--muted)' };
-        const linkedPersonIds   = Array.isArray(m['Linked Person in Tree']) ? m['Linked Person in Tree'] : [];
-        const linkedPersonNames = Array.isArray(m['Full Name (from Linked Person in Tree)'])
-          ? m['Full Name (from Linked Person in Tree)']
-          : (m['Full Name (from Linked Person in Tree)'] ? [m['Full Name (from Linked Person in Tree)']] : []);
-        const notes       = m['Notes'] || '';
+        const linkedPersonIds   = [];
+        const linkedPersonNames = [];
+        const notes       = m.notes || '';
         const safeRec     = JSON.stringify(m).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
         return `<tr data-id="${escHtml(m.id)}">
-          <td data-field="Match Name ★" data-val="${escHtml(name)}" style="font-weight:600;min-width:140px;">${escHtml(name)||'—'}</td>
-          <td data-field="Shared cM" data-val="${escHtml(sharedCm)}" style="white-space:nowrap;">
+          <td data-field="match_name" data-val="${escHtml(name)}" style="font-weight:600;min-width:140px;">${escHtml(name)||'—'}</td>
+          <td data-field="shared_cm" data-val="${escHtml(sharedCm)}" style="white-space:nowrap;">
             ${sharedCm ? `<strong>${escHtml(sharedCm)}</strong> cM` : '—'}
           </td>
-          <td data-field="Shared Segments" data-val="${escHtml(sharedSeg)}" style="text-align:center;">${escHtml(sharedSeg)||'—'}</td>
-          <td data-field="Longest Segment" data-val="${escHtml(longestSeg)}" style="text-align:center;">${escHtml(longestSeg)||'—'}</td>
-          <td data-field="Predicted Relationship" data-val="${escHtml(predRel)}" style="font-size:.8rem;">${escHtml(predRel)||'—'}</td>
-          <td data-field="Likely Actual Relationship" data-val="${escHtml(likelyRel)}" style="font-size:.8rem;color:var(--accent);">${escHtml(likelyRel)||'—'}</td>
-          <td data-field="Clustering Group" data-val="${escHtml(cluster)}" style="font-size:.75rem;color:var(--muted);">${escHtml(cluster)||'—'}</td>
+          <td data-field="shared_segments" data-val="${escHtml(sharedSeg)}" style="text-align:center;">${escHtml(sharedSeg)||'—'}</td>
+          <td data-field="longest_segment" data-val="${escHtml(longestSeg)}" style="text-align:center;">${escHtml(longestSeg)||'—'}</td>
+          <td data-field="relationship" data-val="${escHtml(predRel)}" style="font-size:.8rem;">${escHtml(predRel)||'—'}</td>
+          <td data-field="likely_relationship" data-val="${escHtml(likelyRel)}" style="font-size:.8rem;color:var(--accent);">${escHtml(likelyRel)||'—'}</td>
+          <td data-field="clustering_group" data-val="${escHtml(cluster)}" style="font-size:.75rem;color:var(--muted);">${escHtml(cluster)||'—'}</td>
           <td data-field="Correspondence Status" data-val="${escHtml(corrStatus)}">
             ${corrStatus
               ? `<span style="font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;background:${cs.bg};color:${cs.color};">${escHtml(corrStatus)}</span>`
@@ -2085,15 +2082,15 @@ function renderCollectionsSection(collections) {
   }
 
   el.innerHTML = collections.map(c => {
-    const name       = c['Collection Name ★'] || 'Untitled Collection';
-    const status     = c['Status'] || '';
-    const desc       = c['Description'] || '';
+    const name       = c.name || 'Untitled Collection';
+    const status     = c.status || '';
+    const desc       = c.description || '';
     const ss         = COLLECTION_STATUS_STYLE[status] || COLLECTION_STATUS_STYLE['Closed'];
     // Archive count: use linked Archive Record array
-    const archiveIds = Array.isArray(c['Archive Record']) ? c['Archive Record'] : [];
+    const archiveIds = [];
     const itemCount  = archiveIds.length;
     // Format chips from linked items or just show status
-    const formats    = Array.isArray(c['Formats Included']) ? c['Formats Included'] : [];
+    const formats    = [];
     const safeRec    = JSON.stringify(c).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
 
     // Extract family name from collection name (e.g. "The Hill Papers" → "Hill")
@@ -2131,17 +2128,17 @@ function renderArchiveGallery(archives) {
   }
 
   el.innerHTML = archives.map(a => {
-    const title     = a['Accession Number ★'] || a['Name ★'] || 'Untitled';
-    const desc      = a['Description'] || '';
-    const formats   = Array.isArray(a['Formats Included']) ? a['Formats Included'] : (a['Format Type'] ? [a['Format Type']] : []);
-    const date      = a['Inclusive Dates'] || a['Accession Date'] || a['Estimated Date'] || '';
-    const condition = a['Condition'] || '';
-    const donor     = Array.isArray(a['Name (from Donor)']) ? a['Name (from Donor)'][0] : (a['Name (from Donor)'] || '');
+    const title     = a.name || 'Untitled';
+    const desc      = a.description || '';
+    const formats   = Array.isArray(a.formats_included) ? a.formats_included : [];
+    const date      = a.inclusive_dates || a.accession_date || '';
+    const condition = a.condition_state || '';
+    const donor     = '';
 
     // Pick icon from first format type
     const primaryFormat = formats[0] || '';
     const fmt = FORMAT_ICONS[primaryFormat] || { icon: _SVG.folder, color: '#888' };
-    const imageUrl  = a['Image URL'] || '';
+    const imageUrl  = a.image_url || '';
     const safeRec   = JSON.stringify(a).replace(/</g,'\\u003c').replace(/"/g,'&quot;');
 
     const thumbHtml = imageUrl
@@ -2154,7 +2151,7 @@ function renderArchiveGallery(archives) {
       : `<span class="archive-gallery-icon">${fmt.icon}</span>`;
 
     return `<div class="archive-gallery-item">
-      <div class="archive-gallery-thumb" style="${imageUrl ? 'padding:0;overflow:hidden;' : `background:${fmt.color}22;border-color:${fmt.color}44;`}">
+      <div class="archive-gallery-thumb" style="${imageUrl ? 'padding:0;overflow:hidden;cursor:pointer;' : `background:${fmt.color}22;border-color:${fmt.color}44;`}"${imageUrl ? ` onclick="window.open('${escHtml(imageUrl)}','_blank')"` : ''}>
         ${thumbHtml}
       </div>
       <div class="archive-gallery-info">
@@ -2175,10 +2172,8 @@ function filterArchiveGallery(query) {
   if (!q) { renderArchiveGallery(allArchivesCache); return; }
   const filtered = allArchivesCache.filter(a => {
     const haystack = [
-      a['Accession Number ★'], a['Name ★'], a['Description'],
-      a['Condition'], a['Inclusive Dates'], a['Accession Date'],
-      ...(Array.isArray(a['Formats Included']) ? a['Formats Included'] : []),
-      ...(Array.isArray(a['Name (from Donor)']) ? a['Name (from Donor)'] : []),
+      a.name, a.description, a.condition_state, a.inclusive_dates, a.accession_date,
+      ...(Array.isArray(a.formats_included) ? a.formats_included : []),
     ].filter(Boolean).join(' ').toLowerCase();
     return haystack.includes(q);
   });
@@ -2689,8 +2684,8 @@ async function gridDeleteSelected(tableName) {
   const names = ids.map(id => {
     const r = gt.getCache().find(x => x.id === id);
     if (!r) return id;
-    const pk = Object.keys(r).find(k => k.includes('★'));
-    return String(r[pk] || id).substring(0, 60);
+    const label = r.full_name || r.name || r.match_name || r.title || r.question || id;
+    return String(label).substring(0, 60);
   });
   if (!confirm(`Permanently delete ${ids.length} record${ids.length !== 1 ? 's' : ''}?\n\n• ${names.slice(0,7).join('\n• ')}${names.length > 7 ? `\n  …and ${names.length - 7} more` : ''}\n\nThis cannot be undone.`)) return;
   try {
@@ -2887,26 +2882,26 @@ async function commitCellEdit(el, recordId, field, tableName) {
 function renderCellHtml(tableName, field, value) {
   if (value === null || value === undefined || value === '') return '—';
   const v = String(value);
-  if (tableName === 'Research Questions' && field === 'Status') {
+  if (tableName === 'Research Questions' && field === 'status') {
     const cat = categorizeStatus(v);
     const color = { proven:'var(--success)', inprogress:'#efef7e', disproven:'var(--danger)', open:'var(--muted)' }[cat] || 'var(--muted)';
     return `<span style="font-size:.75rem;font-weight:600;color:${color};">${escHtml(v.substring(0,28))}${v.length>28?'…':''}</span>`;
   }
-  if (tableName === 'Sources' && field === 'Search Status') {
+  if (tableName === 'Sources' && field === 'search_status') {
     const S = { Found:{bg:'#0d2a0d',color:'#7ef87e'}, Searched:{bg:'#0d1e2a',color:'#7ec8ef'}, 'Not Found':{bg:'#2a0d0d',color:'#ef7e7e'}, 'Partially Searched':{bg:'#2a1a0d',color:'#efb87e'}, 'Search Pending':{bg:'#1a1a0d',color:'#efef7e'}, ' Search Pending':{bg:'#1a1a0d',color:'#efef7e'}, 'Not Yet':{bg:'var(--surface2)',color:'var(--muted)'} };
     const s = S[v] || { bg:'var(--surface2)', color:'var(--muted)' };
     return `<span style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px;background:${s.bg};color:${s.color};white-space:nowrap;">${escHtml(v)}</span>`;
   }
-  if (tableName === 'Sources' && field === 'Source Type') {
+  if (tableName === 'Sources' && field === 'source_type') {
     const C = { primary:{bg:'#0d1e2a',color:'#7ec8ef'}, secondary:{bg:'#0d1e0d',color:'#a8d8a8'}, repository:{bg:'#1a0d2a',color:'#c494ef'}, dna:{bg:'#0d2020',color:'#7eefef'}, found:{bg:'#2a1a0d',color:'#efb87e'}, other:{bg:'var(--surface2)',color:'var(--muted)'} };
     const tc = C[categorizeSrcType(v)] || C.other;
     return `<span style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px;background:${tc.bg};color:${tc.color};white-space:nowrap;">${escHtml(v)}</span>`;
   }
-  if (tableName === 'Research Log' && field === 'Research Status') {
+  if (tableName === 'Research Log' && field === 'research_status') {
     const sc = RL_STATUS_COLORS[v] || RL_STATUS_COLORS['On Hold'];
     return `<span style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px;background:${sc.bg};color:${sc.color};white-space:nowrap;">${escHtml(v)}</span>`;
   }
-  if (tableName === 'DNA Matches' && field === 'Correspondence Status') {
+  if (tableName === 'DNA Matches' && field === 'correspondence_status') {
     const CS = { Contacted:{bg:'#0d1e2a',color:'#7ec8ef'}, 'Not Contacted':{bg:'var(--surface2)',color:'var(--muted)'}, 'No Response':{bg:'#2a1a0d',color:'#e2a85c'}, Responded:{bg:'#0d2a1a',color:'#4caf7d'}, 'Shared Tree':{bg:'#2a2010',color:'var(--accent)'}, Unresponsive:{bg:'#2a0d0d',color:'var(--danger)'} };
     const cs = CS[v] || { bg:'var(--surface2)', color:'var(--muted)' };
     return `<span style="font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;background:${cs.bg};color:${cs.color};">${escHtml(v)}</span>`;
@@ -2918,45 +2913,45 @@ const TABLE_SCHEMAS = {
   'People': [
     // ── Identity ──────────────────────────────────────────────────────────────
     { field: '_photoUpload',        type: 'image',    label: 'Photo',
-      uploadEndpoint: '/api/upload-person-photo', urlFieldId: 'mf-Photo_URL',
-      previewField: 'Photo URL' },
-    { field: 'Photo URL',           type: 'text',     label: 'Photo URL (auto-filled on upload)' },
-    { field: 'Full Name ★',         type: 'text',     label: 'Full Name', required: true },
-    { field: 'Birth Name',          type: 'text',     label: 'Birth Name (if different)' },
-    { field: 'Also Known As',       type: 'text',     label: 'Also Known As / Aliases' },
-    { field: 'Sex',                 type: 'select',   label: 'Sex',
+      uploadEndpoint: '/api/upload-person-photo', urlFieldId: 'mf-photo_url',
+      previewField: 'photo_url' },
+    { field: 'photo_url',           type: 'text',     label: 'Photo URL (auto-filled on upload)' },
+    { field: 'full_name',           type: 'text',     label: 'Full Name', required: true },
+    { field: 'birth_name',          type: 'text',     label: 'Birth Name (if different)' },
+    { field: 'also_known_as',       type: 'text',     label: 'Also Known As / Aliases' },
+    { field: 'sex',                 type: 'select',   label: 'Sex',
       options: ['','Male','Female','Unknown'] },
-    { field: 'Race/Ethnicity (as recorded)', type: 'text', label: 'Race/Ethnicity (as recorded in sources)' },
+    { field: 'race_ethnicity',      type: 'text',     label: 'Race/Ethnicity (as recorded in sources)' },
     // ── Family position ───────────────────────────────────────────────────────
-    { field: 'Generation Number',   type: 'select',   label: 'Generation Number (0 = self, 1 = parent…)',
+    { field: 'generation_number',   type: 'select',   label: 'Generation Number (0 = self, 1 = parent…)',
       options: ['','0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'] },
-    { field: 'Relation to Self',    type: 'text',     label: 'Relation to Self (e.g. Paternal Great-Grandmother)' },
-    { field: 'Line',                type: 'select',   label: 'Family Line',
+    { field: 'relation_to_self',    type: 'text',     label: 'Relation to Self (e.g. Paternal Great-Grandmother)' },
+    { field: 'line',                type: 'select',   label: 'Family Line',
       options: ['','Paternal','Maternal','Both','Unknown'] },
     // ── Vital dates & places ──────────────────────────────────────────────────
-    { field: 'Birth Date',          type: 'text',     label: 'Birth Date' },
-    { field: 'Birth Place',         type: 'text',     label: 'Birth Place' },
-    { field: 'Death Date',          type: 'text',     label: 'Death Date' },
-    { field: 'Death Place',         type: 'text',     label: 'Death Place' },
-    { field: 'Burial Place',        type: 'text',     label: 'Burial Place' },
+    { field: 'birth_date',          type: 'text',     label: 'Birth Date' },
+    { field: 'birth_place',         type: 'text',     label: 'Birth Place' },
+    { field: 'death_date',          type: 'text',     label: 'Death Date' },
+    { field: 'death_place',         type: 'text',     label: 'Death Place' },
+    { field: 'burial_place',        type: 'text',     label: 'Burial Place' },
     // ── Online profiles ───────────────────────────────────────────────────────
-    { field: 'Ancestry Profile URL', type: 'text',   label: 'Ancestry Profile URL' },
-    { field: 'FamilySearch ID',     type: 'text',     label: 'FamilySearch ID (FSID)' },
-    { field: 'Geni Profile URL',    type: 'text',     label: 'Geni.com Profile URL' },
+    { field: 'ancestry_profile_url', type: 'text',   label: 'Ancestry Profile URL' },
+    { field: 'family_search_id',    type: 'text',     label: 'FamilySearch ID (FSID)' },
+    { field: 'geni_profile_url',    type: 'text',     label: 'Geni.com Profile URL' },
     // ── Notes ─────────────────────────────────────────────────────────────────
-    { field: 'Notes',               type: 'textarea', label: 'Notes' },
+    { field: 'notes',               type: 'textarea', label: 'Notes' },
     // ── Linked records (read-only — managed from their own pages) ─────────────
     { field: '_linked_note', type: 'note',
       label: 'Linked Records',
       text:  'Research Questions, DNA Tests, Collections, Archives, Sources, DNA Matches, and Evidence Analysis are linked from their own pages.' },
   ],
   'Research Questions': [
-    { field: 'Research Question ★', type: 'textarea', label: 'Research Question', required: true },
+    { field: 'question', type: 'textarea', label: 'Research Question', required: true },
     { field: '_personLink', type: 'person-link', label: 'Person This Question Is About',
       targetField: 'People' },
 
     { field: '_s1', type: 'section', label: 'Classification' },
-    { field: 'Research Type', type: 'select', label: 'Research Type',
+    { field: 'research_type', type: 'select', label: 'Research Type',
       options: [
         '',
         'Identity: Who is this person? Proving existence, name, dates',
@@ -2967,7 +2962,7 @@ const TABLE_SCHEMAS = {
         'Migration: Tracing movement between locations',
         'Vital Records',
       ]},
-    { field: 'Status', type: 'select', label: 'Status',
+    { field: 'status', type: 'select', label: 'Status',
       options: [
         '',
         'Open: Question exists, research not yet started',
@@ -2976,153 +2971,157 @@ const TABLE_SCHEMAS = {
         'Disproven: Hypothesis definitively ruled out',
         'Unresolvable: Records destroyed or inaccessible — documented dead end',
       ]},
-    { field: 'Priority', type: 'select', label: 'Priority',
+    { field: 'priority', type: 'select', label: 'Priority',
       options: [
         '',
         'High: Blocks other research — solve this first',
         'Medium: Important but not blocking',
         'Low: Would be nice to know but not urgent',
       ]},
-    { field: 'Date Opened',   type: 'date', label: 'Date Opened' },
-    { field: 'Date Resolved', type: 'date', label: 'Date Resolved' },
-    { field: 'Next Action',   type: 'text', label: 'Next Action (one specific next step)' },
+    { field: 'date_opened',   type: 'date', label: 'Date Opened' },
+    { field: 'date_resolved', type: 'date', label: 'Date Resolved' },
+    { field: 'next_action',   type: 'text', label: 'Next Action (one specific next step)' },
 
     { field: '_s2', type: 'section', label: 'Findings & Analysis' },
-    { field: 'Current Conclusion',  type: 'textarea', label: 'Current Conclusion' },
-    { field: 'Gaps Identified',     type: 'textarea', label: 'Gaps Identified (sources not yet searched)' },
-    { field: 'Conflicting Evidence',type: 'textarea', label: 'Conflicting Evidence' },
+    { field: 'conclusion',          type: 'textarea', label: 'Current Conclusion' },
+    { field: 'gaps_identified',     type: 'textarea', label: 'Gaps Identified (sources not yet searched)' },
+    { field: 'conflicting_evidence',type: 'textarea', label: 'Conflicting Evidence' },
 
     { field: '_s3', type: 'section', label: 'GPS Checklist' },
-    { field: 'Reasonably Exhaustive Search Done ', type: 'checkbox', label: 'Reasonably Exhaustive Search Done',
+    { field: 'res_done',        type: 'checkbox', label: 'Reasonably Exhaustive Search Done',
       checkLabel: 'Reasonably Exhaustive Search Done' },
-    { field: 'All Evidence Cited',    type: 'checkbox', label: 'All Evidence Cited',
+    { field: 'all_evidence_cited', type: 'checkbox', label: 'All Evidence Cited',
       checkLabel: 'All Evidence Cited' },
-    { field: 'Conflicts Resolved ',   type: 'checkbox', label: 'Conflicts Resolved',
+    { field: 'conflicts_resolved', type: 'checkbox', label: 'Conflicts Resolved',
       checkLabel: 'Conflicts Resolved' },
-    { field: 'Written Conclusion Exists', type: 'checkbox', label: 'Written Conclusion Exists',
+    { field: 'written_conclusion', type: 'checkbox', label: 'Written Conclusion Exists',
       checkLabel: 'Written Conclusion Exists (Status → Proven when all four are checked)' },
 
     { field: '_s4', type: 'section', label: 'References' },
-    { field: 'Collections',       type: 'text',     label: 'Collections' },
-    { field: 'Sources Consulted', type: 'text',     label: 'Sources Consulted' },
-    { field: 'Evidence Items',    type: 'text',     label: 'Evidence Items' },
-    { field: 'DNA Tests',         type: 'text',     label: 'DNA Tests' },
+    { field: 'collections_ref',    type: 'text',     label: 'Collections' },
+    { field: 'sources_consulted',  type: 'text',     label: 'Sources Consulted' },
+    { field: 'evidence_items',     type: 'text',     label: 'Evidence Items' },
+    { field: 'dna_tests',          type: 'text',     label: 'DNA Tests' },
 
     { field: '_linked_rq', type: 'note', label: 'Linked Records',
       text: 'People, Sources, Evidence Analysis, DNA Testing, and DNA Matches are linked from their own pages.' },
   ],
   'Sources': [
-    { field: 'Name ★',         type: 'text',     label: 'Source Name', required: true },
+    { field: 'name',           type: 'text',     label: 'Source Name', required: true },
     { field: '_personLink',    type: 'person-link', label: 'Person This Source Is About',
       targetField: 'People Mentioned' },
 
     { field: '_s_src1', type: 'section', label: 'File Attachment' },
     { field: '_sourceFileUpload', type: 'image', label: 'Attach File / Image',
-      uploadEndpoint: '/api/upload-source-file', urlFieldId: 'mf-Source_File_URL',
-      previewField: 'Source File URL' },
-    { field: 'Source File URL', type: 'text',  label: 'Source File URL (auto-filled on upload)' },
+      uploadEndpoint: '/api/upload-source-file', urlFieldId: 'mf-source_file_url',
+      previewField: 'source_file_url' },
+    { field: 'source_file_url', type: 'text',  label: 'Source File URL (auto-filled on upload)' },
 
     { field: '_s_src2', type: 'section', label: 'Classification' },
-    { field: 'Source Type',    type: 'select',   label: 'Source Type',
+    { field: 'source_type',    type: 'select',   label: 'Source Type',
       options: ['','Repository','Primary Source','Secondary Source','Derivative',
                 'Finding Aid','Database','Website','Correspondence','Primary'] },
-    { field: 'Record Type',    type: 'multicheck', label: 'Record Type',
+    { field: 'record_type',    type: 'multicheck', label: 'Record Type',
       options: ['Census','Vital Record','Land','Military','Probate','Cemetery','Church',
                 'Newspaper','Correspondence','Photograph','Legal','Tax',
                 'Slave Schedule',"Freedmen's Bureau",'DNA','Ship Manifest','Other'] },
 
     { field: '_s_src3', type: 'section', label: 'Location & Access' },
-    { field: 'Repository',         type: 'text', label: 'Repository / Archive' },
-    { field: 'URL',                type: 'text', label: 'URL / Link' },
-    { field: 'Physical Location',  type: 'text', label: 'Physical Location (call number, box, folder)' },
-    { field: 'Date of Source',     type: 'text', label: 'Date of Source' },
-    { field: 'Date Accessed',      type: 'date', label: 'Date Accessed' },
+    { field: 'repository',         type: 'text', label: 'Repository / Archive' },
+    { field: 'url',                type: 'text', label: 'URL / Link' },
+    { field: 'physical_location',  type: 'text', label: 'Physical Location (call number, box, folder)' },
+    { field: 'date_of_source',     type: 'text', label: 'Date of Source' },
+    { field: 'date_accessed',      type: 'date', label: 'Date Accessed' },
 
     { field: '_s_src4', type: 'section', label: 'Citation' },
-    { field: 'Full Citation',      type: 'textarea', label: 'Full Citation' },
-    { field: 'Short Citation',     type: 'text',     label: 'Short Citation' },
+    { field: 'full_citation',      type: 'textarea', label: 'Full Citation' },
+    { field: 'short_citation',     type: 'text',     label: 'Short Citation' },
 
     { field: '_s_src5', type: 'section', label: 'Search Status' },
-    { field: 'Search Status', type: 'select', label: 'Search Status',
+    { field: 'search_status', type: 'select', label: 'Search Status',
       options: ['','Not Yet','Searched','Found','Not Found','Partially Searched',' Search Pending'] },
-    { field: 'Search Notes',  type: 'textarea', label: 'Search Notes' },
+    { field: 'search_notes',  type: 'textarea', label: 'Search Notes' },
 
     { field: '_linked_src', type: 'note', label: 'Linked Records',
       text: 'Collections, Research Questions, People Mentioned, and Evidence Analysis are linked from their own pages.' },
   ],
   'DNA Testing': [
-    { field: 'Test Label ★',     type: 'text',     label: 'Test Label (Company + Type + Subject)', required: true },
+    { field: 'name',             type: 'text',     label: 'Test Label (Company + Type + Subject)', required: true },
     { field: '_personLink',      type: 'person-link', label: 'Person Tested',
       targetField: 'Test Subject' },
-    { field: 'Company',          type: 'select',   label: 'Testing Company',
+    { field: 'company',          type: 'select',   label: 'Testing Company',
       options: ['','AncestryDNA','23AndMe','African Ancestry','My Heritage','Geni',
                 'FamilyTreeDNA','LivingDNA','Nebula Genomics','MyFamilyTree DNA','GedMatch'] },
-    { field: 'Test Type',        type: 'select',   label: 'Test Type',
+    { field: 'test_type',        type: 'select',   label: 'Test Type',
       options: ['','Autosomal','MtDNA','Y DNA','X DNA'] },
-    { field: 'Haplogroup',       type: 'text',     label: 'Haplogroup (mtDNA or Y-DNA)' },
-    { field: 'Ethnicity Estimates', type: 'textarea', label: 'Ethnicity Estimates (full breakdown)' },
-    { field: 'Documentary Corroboration', type: 'textarea', label: 'Documentary Corroboration' },
-    { field: 'Analysis Notes',   type: 'textarea', label: 'Analysis Notes' },
+    { field: 'haplogroup',       type: 'text',     label: 'Haplogroup (mtDNA or Y-DNA)' },
+    { field: 'ethnicity_estimates', type: 'textarea', label: 'Ethnicity Estimates (full breakdown)' },
+    { field: 'documentary_corroboration', type: 'textarea', label: 'Documentary Corroboration' },
+    { field: 'analysis_notes',   type: 'textarea', label: 'Analysis Notes' },
   ],
   'DNA Matches': [
-    { field: 'Match Name ★', type: 'text', label: 'Match Name', required: true },
+    { field: 'match_name', type: 'text', label: 'Match Name', required: true },
     { field: '_personLink', type: 'person-link', label: 'Linked Person in Tree (your tree)',
       targetField: 'Linked Person in Tree' },
 
     { field: '_s_dna1', type: 'section', label: 'Shared DNA' },
-    { field: 'Shared cM',        type: 'text', label: 'Shared cM' },
-    { field: 'Shared Segments',  type: 'text', label: 'Shared Segments' },
-    { field: 'Longest Segment',  type: 'text', label: 'Longest Segment (cM)' },
+    { field: 'shared_cm',        type: 'text', label: 'Shared cM' },
+    { field: 'shared_segments',  type: 'text', label: 'Shared Segments' },
+    { field: 'longest_segment',  type: 'text', label: 'Longest Segment (cM)' },
 
     { field: '_s_dna2', type: 'section', label: 'Relationship Analysis' },
-    { field: 'Predicted Relationship',     type: 'text',     label: "Predicted Relationship (platform's estimate)" },
-    { field: 'Likely Actual Relationship', type: 'text',     label: 'Likely Actual Relationship (your assessment)' },
-    { field: 'Possible Relationships',     type: 'textarea', label: 'All Possible Relationships (consistent with cM)' },
-    { field: 'Clustering Group',           type: 'text',     label: 'Clustering Group (e.g. Cluster A – Daggs line)' },
+    { field: 'relationship',           type: 'text',     label: "Predicted Relationship (platform's estimate)" },
+    { field: 'likely_relationship',    type: 'text',     label: 'Likely Actual Relationship (your assessment)' },
+    { field: 'possible_relationships', type: 'textarea', label: 'All Possible Relationships (consistent with cM)' },
+    { field: 'clustering_group',       type: 'text',     label: 'Clustering Group (e.g. Cluster A – Daggs line)' },
 
     { field: '_s_dna3', type: 'section', label: 'Correspondence' },
-    { field: 'Correspondence Status', type: 'select', label: 'Correspondence Status',
+    { field: 'correspondence_status', type: 'select', label: 'Correspondence Status',
       options: ['','Contacted','Not Contacted','No Response','Responded','Shared Tree','Unresponsive'] },
-    { field: 'Last Contact',       type: 'date',     label: 'Last Contact' },
-    { field: 'Correspondence Log', type: 'textarea', label: 'Correspondence Log' },
+    { field: 'last_contact',       type: 'date',     label: 'Last Contact' },
+    { field: 'correspondence_log', type: 'textarea', label: 'Correspondence Log' },
 
     { field: '_s_dna4', type: 'section', label: 'Research Links' },
-    { field: 'Notes', type: 'textarea', label: 'Notes' },
+    { field: 'notes', type: 'textarea', label: 'Notes' },
 
     { field: '_linked_dna', type: 'note', label: 'Linked Records',
       text: 'Test (DNA Testing), Linked Person in Tree (People), and Research Questions are linked from their own pages.' },
   ],
   'Archives': [
-    { field: 'Accession Number ★', type: 'text',       label: 'Accession Number', required: true },
-    { field: '_personLink',        type: 'person-link', label: 'Creator / Person This Item Is About',
+    { field: 'name',              type: 'text',       label: 'Accession Number', required: true },
+    { field: '_personLink',       type: 'person-link', label: 'Creator / Person This Item Is About',
       targetField: 'Creator' },
-    { field: '_imageUpload',       type: 'image',      label: 'Item Image / Scan' },
-    { field: 'Image URL',          type: 'text',       label: 'Image URL (auto-filled on upload)' },
-    { field: 'Description',        type: 'textarea',   label: 'Description' },
-    { field: 'Formats Included',   type: 'multicheck', label: 'Formats Included',
+    { field: '_imageUpload',      type: 'image',      label: 'Item Image / Scan' },
+    { field: 'image_url',         type: 'text',       label: 'Image URL (auto-filled on upload)' },
+    { field: 'description',       type: 'textarea',   label: 'Description' },
+    { field: 'formats_included',  type: 'multicheck', label: 'Formats Included',
       options: ['Photocopies','Photographs','Correspondence','Legal Docs','Microfilm',
                 '35mm Slides','Digital Files ','Obituaries','Newspapers'] },
-    { field: 'Inclusive Dates',    type: 'text',       label: 'Inclusive Dates' },
-    { field: 'Accession Date',     type: 'date',       label: 'Accession Date' },
-    { field: 'Extent',             type: 'text',       label: 'Extent (e.g. "1 box, 47 items")' },
-    { field: 'Condition',          type: 'select',     label: 'Condition',
+    { field: 'inclusive_dates',   type: 'text',       label: 'Inclusive Dates' },
+    { field: 'accession_date',    type: 'date',       label: 'Accession Date' },
+    { field: 'extent',            type: 'text',       label: 'Extent (e.g. "1 box, 47 items")' },
+    { field: 'condition_state',   type: 'select',     label: 'Condition',
       options: ['','Excellent','Good','Fair','Poor','Critical'] },
-    { field: 'Storage Type',       type: 'text',       label: 'Storage Type' },
-    { field: 'Restrictions & Access', type: 'textarea', label: 'Restrictions & Access' },
-    { field: 'Recommended Treatments', type: 'multicheck', label: 'Recommended Treatments',
+    { field: 'storage_type',      type: 'text',       label: 'Storage Type' },
+    { field: 'restrictions',      type: 'textarea',   label: 'Restrictions & Access' },
+    { field: 'recommended_treatments', type: 'multicheck', label: 'Recommended Treatments',
       options: ['Metadata','Digitization','Deacidification','Reboxing','Renaming of Files',
                 'Conservation','Rehousing','Transcription'] },
-    { field: 'AI Metadata',        type: 'textarea',   label: 'AI Metadata (JSON)' },
+    { field: 'metadata',          type: 'textarea',   label: 'AI Metadata (JSON)' },
   ],
   'Collections': [
-    { field: 'Collection Name ★',  type: 'text',     label: 'Collection Name', required: true },
-    { field: '_personLink',        type: 'person-link', label: 'Primary Family Member',
+    { field: 'name',              type: 'text',     label: 'Collection Name', required: true },
+    { field: '_personLink',       type: 'person-link', label: 'Primary Family Member',
       targetField: 'Family Names' },
-    { field: 'Status',             type: 'select',   label: 'Status',
+    { field: 'status',            type: 'select',   label: 'Status',
       options: ['','Active','Processing','Complete','Pending Accession'] },
-    { field: 'Description',        type: 'textarea', label: 'Description' },
-    { field: 'Access Restrictions', type: 'textarea', label: 'Access Restrictions' },
-    { field: 'Allowed to Share Online', type: 'checkbox', label: 'Allowed to Share Online',
+    { field: 'description',       type: 'textarea', label: 'Description' },
+    { field: '_imageUpload',      type: 'image',    label: 'Image',
+      uploadEndpoint: '/api/upload-archive-image', urlFieldId: 'mf-image_url',
+      previewField: 'image_url' },
+    { field: 'image_url',         type: 'text',     label: 'Image URL (auto-filled on upload)' },
+    { field: 'access_restrictions', type: 'textarea', label: 'Access Restrictions' },
+    { field: 'allow_share_online', type: 'checkbox', label: 'Allowed to Share Online',
       checkLabel: 'Allowed to Share Online (donor consent to publish)' },
   ],
   'Evidence Analysis': [
@@ -3159,18 +3158,18 @@ const TABLE_SCHEMAS = {
       text: 'Sources, Research Questions, and People are linked from their own pages.' },
   ],
   'Research Log': [
-    { field: 'Log Title ★',          type: 'text',       label: 'Log Title',          required: true },
+    { field: 'title',                type: 'text',       label: 'Log Title',          required: true },
     { field: '_personLink',          type: 'person-link', label: 'Person Being Researched',
       targetField: 'Person' },
-    { field: 'Research Status',      type: 'select',     label: 'Research Status',
+    { field: 'research_status',      type: 'select',     label: 'Research Status',
       options: ['','Open','In Progress','Proven','Disproven','On Hold'] },
-    { field: 'Genealogical Line',    type: 'select',     label: 'Genealogical Line',
+    { field: 'genealogical_line',    type: 'select',     label: 'Genealogical Line',
       options: ['','Perrin','Daggs','Hill','Epps','Redmond','Abdul Rahman','Unknown'] },
-    { field: 'Generational Line',    type: 'select',     label: 'Generational Line (1 = you)',
+    { field: 'generational_line',    type: 'select',     label: 'Generational Line (1 = you)',
       options: ['','1','2','3','4','5','6','7','8','9','10'] },
-    { field: 'Relationship',         type: 'text',       label: 'Relationship (e.g. 3rd Great-Grandmother)' },
-    { field: 'Notes',                type: 'textarea',   label: 'Research Notes / Summary' },
-    { field: 'Records Checklist',    type: 'multicheck', label: 'Records Checklist',
+    { field: 'relationship',         type: 'text',       label: 'Relationship (e.g. 3rd Great-Grandmother)' },
+    { field: 'notes',                type: 'textarea',   label: 'Research Notes / Summary' },
+    { field: 'records_checklist',    type: 'multicheck', label: 'Records Checklist',
       options: ['Census Records','Slave Schedules',"Freedmen's Bureau Records",
                 'Ship Manifest / Passenger Lists','Birth Records','Death Records',
                 'Marriage Records','Military Records / USCT','Land Records / Deeds',
@@ -3178,8 +3177,8 @@ const TABLE_SCHEMAS = {
                 'Immigration Records','Tax Records','Social Security Records',
                 'DNA Records','FamilySearch Tree','Ancestry Tree','Geni.com Tree',
                 'Runaway Slave Advertisements'] },
-    { field: 'Ancestry Profile URL', type: 'text',       label: 'Ancestry Profile URL' },
-    { field: 'Geni.com Profile URL', type: 'text',       label: 'Geni.com Profile URL' },
+    { field: 'ancestry_profile_url', type: 'text',       label: 'Ancestry Profile URL' },
+    { field: 'geni_profile_url',     type: 'text',       label: 'Geni.com Profile URL' },
     { field: '_linked_rl', type: 'note', label: 'Linked Records',
       text: 'Research Questions, Sources, and DNA Matches are linked from their own pages.' },
   ],
@@ -3471,17 +3470,6 @@ function closeModalOnOverlay(e) {
   if (e.target === document.getElementById('record-modal')) closeModal();
 }
 
-// ── Profile ───────────────────────────────────────────────────────────────────
-function loadProfile() {
-  const saved = JSON.parse(localStorage.getItem('lr-profile') || '{}');
-  document.getElementById('profile-name').value     = saved.name     || '';
-  document.getElementById('profile-email').value    = saved.email    || '';
-  document.getElementById('profile-username').value = saved.username || '';
-  if (saved.username) {
-    document.getElementById('sidebar-username').textContent = saved.username;
-  }
-}
-
 // ── User auth helpers (localStorage) ─────────────────────────────────────────
 function getUser() {
   try { return JSON.parse(localStorage.getItem('lr_user') || 'null'); } catch { return null; }
@@ -3736,4 +3724,3 @@ loadDashboard();
 initDatabaseCategories();
 initLocationSelector();
 initSidebarProfile();   // populate sidebar from localStorage user
-loadProfile();

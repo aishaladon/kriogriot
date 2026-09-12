@@ -127,22 +127,34 @@ async function setup() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS archives (
-      id          INT AUTO_INCREMENT PRIMARY KEY,
-      user_id     INT NOT NULL,
-      name        VARCHAR(500),
-      description TEXT,
-      image_url   VARCHAR(500),
-      metadata    JSON,
-      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      id                      INT AUTO_INCREMENT PRIMARY KEY,
+      user_id                 INT NOT NULL,
+      name                    VARCHAR(500),
+      description             TEXT,
+      image_url               VARCHAR(500),
+      metadata                JSON,
+      formats_included        TEXT,
+      inclusive_dates         VARCHAR(200),
+      accession_date          DATE,
+      extent                  VARCHAR(500),
+      condition_state         VARCHAR(100),
+      storage_type            VARCHAR(200),
+      restrictions            TEXT,
+      recommended_treatments  TEXT,
+      created_at              DATETIME DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 
     `CREATE TABLE IF NOT EXISTS collections (
-      id          INT AUTO_INCREMENT PRIMARY KEY,
-      user_id     INT NOT NULL,
-      name        VARCHAR(500),
-      description TEXT,
-      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+      id                  INT AUTO_INCREMENT PRIMARY KEY,
+      user_id             INT NOT NULL,
+      name                VARCHAR(500),
+      description         TEXT,
+      image_url           TEXT,
+      status              VARCHAR(100),
+      access_restrictions TEXT,
+      allow_share_online  TINYINT(1) DEFAULT 0,
+      created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
       INDEX idx_user (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   ];
@@ -159,6 +171,31 @@ async function setup() {
   }
 
   console.log('✅  All tables created successfully.');
+
+  // Safe migrations for existing live databases
+  const migrations = [
+    `ALTER TABLE collections ADD COLUMN IF NOT EXISTS image_url TEXT`,
+    `ALTER TABLE collections ADD COLUMN IF NOT EXISTS status VARCHAR(100)`,
+    `ALTER TABLE collections ADD COLUMN IF NOT EXISTS access_restrictions TEXT`,
+    `ALTER TABLE collections ADD COLUMN IF NOT EXISTS allow_share_online TINYINT(1) DEFAULT 0`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS formats_included TEXT`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS inclusive_dates VARCHAR(200)`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS accession_date DATE`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS extent VARCHAR(500)`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS condition_state VARCHAR(100)`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS storage_type VARCHAR(200)`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS restrictions TEXT`,
+    `ALTER TABLE archives ADD COLUMN IF NOT EXISTS recommended_treatments TEXT`,
+    `ALTER TABLE people ADD COLUMN IF NOT EXISTS how_known ENUM('documented','inferred','oral','carried','contested','absent','synthetic') DEFAULT 'inferred'`,
+    `ALTER TABLE people ADD COLUMN IF NOT EXISTS custodian VARCHAR(255)`,
+    `ALTER TABLE sources ADD COLUMN IF NOT EXISTS how_known ENUM('documented','inferred','oral','carried','contested','absent','synthetic') DEFAULT 'documented'`,
+    `ALTER TABLE research_log ADD COLUMN IF NOT EXISTS how_known ENUM('documented','inferred','oral','carried','contested','absent','synthetic') DEFAULT 'inferred'`,
+  ];
+  for (const sql of migrations) {
+    try { await conn.query(sql); } catch (_) { /* column may already exist */ }
+  }
+  console.log('✅  Migrations applied.');
+
   await conn.end();
 }
 

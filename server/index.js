@@ -41,6 +41,28 @@ function gedcomOwnerId() {
   return id ? String(id).trim() : null;
 }
 
+// Mango leads (name/email/phone from prospective customers) are only for the
+// site owner to see. requireAuth alone just checks *some* account is logged
+// in — every registered user could read and edit every other lead. Fails
+// closed: unset ADMIN_EMAIL means no one gets admin routes, not everyone.
+function requireAdmin(req, res, next) {
+  const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  if (!adminEmail || !req.user || (req.user.email || '').toLowerCase() !== adminEmail) {
+    return res.status(403).json({ error: 'Admin access required.' });
+  }
+  next();
+}
+
+// Same admin gate, but also accepts the ADMIN_KEY header — the same
+// credential registration already uses for privileged actions with no
+// logged-in owner session. Lets destructive cleanup routes (delete a lead,
+// delete a stray account) be run without first logging in as the owner.
+function requireAdminOrKey(req, res, next) {
+  const adminKey = process.env.ADMIN_KEY;
+  if (adminKey && req.headers['x-admin-key'] === adminKey) return next();
+  requireAdmin(req, res, next);
+}
+
 function loadGedcomCache() {
   if (_gedcomCache) return _gedcomCache;
   if (!fs.existsSync(GEDCOM_MAP_FILE) || !fs.existsSync(GEDCOM_DATA_FILE)) return null;
@@ -110,6 +132,21 @@ const uploadArchiveImage = makeDiskUploader('archives');
 const uploadPersonPhoto  = makeDiskUploader('people');
 const uploadSourceFile   = makeDiskUploader('sources');
 
+// Deletes the local copy of a file previously served under /uploads/...,
+// given the URL stored on a now-deleted record. Best-effort: a record
+// missing its file, or a file already gone, is not an error worth failing
+// the delete over. Leaves any NAS-mirrored copy alone — see FILE_URL_COLUMN
+// in db-mysql.js for why.
+function deleteLocalUploadFile(fileUrl) {
+  if (!fileUrl || !fileUrl.startsWith('/uploads/')) return;
+  const rel = fileUrl.slice('/uploads/'.length);
+  const full = path.join(UPLOAD_ROOT, rel);
+  if (!full.startsWith(UPLOAD_ROOT)) return; // guard against a malformed path escaping the upload root
+  fs.unlink(full, (err) => {
+    if (err && err.code !== 'ENOENT') console.warn(`Could not delete local file ${full}: ${err.message}`);
+  });
+}
+
 // ── Middleware ─────────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -169,10 +206,14 @@ async function sendEmail({ to, subject, html }) {
 
   // Fall back to nodemailer for other SMTP providers
   const nodemailer = require('nodemailer');
+  const smtpPort = Number(process.env.SMTP_PORT || 587);
   const mailer = nodemailer.createTransport({
     host:   process.env.SMTP_HOST || 'smtp.hostinger.com',
-    port:   Number(process.env.SMTP_PORT || 587),
-    secure: false,
+    port:   smtpPort,
+    // 465 is implicit TLS from the first byte; 587/25 start plaintext and
+    // upgrade via STARTTLS. Getting this backwards drops the connection
+    // ("unexpected socket close") before nodemailer ever sends a command.
+    secure: smtpPort === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   });
   try {
@@ -531,6 +572,27 @@ Request #${rowId}`;
   }
 });
 
+// These two are destructive owner-only actions with no natural logged-in
+// moment (deleting spam/a leftover test account), so — like registration —
+// they accept the ADMIN_KEY header as well as an owner session, and so sit
+// before the blanket requireAuth below rather than depend on it.
+app.delete('/api/mango/:id', requireAdminOrKey, async (req, res) => {
+  try {
+    const removed = await db.mangoDelete(req.params.id);
+    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/admin/user/:id', requireAdminOrKey, async (req, res) => {
+  try {
+    const { affectedRows, fileUrls } = await db.deleteUserAccount(req.params.id);
+    if (affectedRows === 0) return res.status(404).json({ error: 'Account not found.' });
+    fileUrls.forEach(deleteLocalUploadFile);
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ── All routes below require auth ──────────────────────────────────────────────
 app.use('/api', requireAuth);
 
@@ -577,10 +639,21 @@ app.get('/api/ancestors', async (req, res) => {
 
 app.get('/api/ancestor/:id', async (req, res) => {
   try {
-    const profile = await db.getAncestorProfile(req.user.userId, req.params.id);
-    if (!profile) return res.status(404).json({ error: 'Not found.' });
+    const ancestor = await db.getAncestorProfile(req.user.userId, req.params.id);
+    if (!ancestor) return res.status(404).json({ error: 'Not found.' });
     const relationships = await getRelationshipsFor(req.user.userId, req.params.id);
-    res.json({ ...profile, relationships });
+    res.json({
+      ancestor,
+      relationships,
+      questions: [],
+      sources: [],
+      evidence: [],
+      dnaTests: [],
+      dnaMatches: [],
+      archives: [],
+      collections: [],
+      researchLog: [],
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -588,8 +661,9 @@ app.get('/api/ancestor/:id', async (req, res) => {
 
 app.delete('/api/ancestor/:id', async (req, res) => {
   try {
-    const removed = await db.deletePerson(req.user.userId, req.params.id);
-    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
+    const { affectedRows, fileUrl } = await db.deletePerson(req.user.userId, req.params.id);
+    if (affectedRows === 0) return res.status(404).json({ error: 'Record not found.' });
+    deleteLocalUploadFile(fileUrl);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -597,7 +671,17 @@ app.delete('/api/ancestor/:id', async (req, res) => {
 });
 
 app.post('/api/merge-ancestors', async (req, res) => {
-  res.json({ ok: true, merged: {} });
+  const { keepId, deleteId } = req.body || {};
+  if (!keepId || !deleteId) return res.status(400).json({ error: 'keepId and deleteId are required.' });
+  try {
+    const { fieldsMerged, fileUrl } = await db.mergePeople(req.user.userId, keepId, deleteId);
+    // If photo_url was itself one of the merged fields, keepId's row now
+    // points at this same file — deleting it would break keepId's photo too.
+    if (!fieldsMerged.includes('photo_url')) deleteLocalUploadFile(fileUrl);
+    res.json({ ok: true, merged: { fieldsMerged } });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // ── Relationships ──────────────────────────────────────────────────────────────
@@ -699,8 +783,9 @@ app.patch('/api/record/:table/:id', async (req, res) => {
 
 app.delete('/api/record/:table/:id', async (req, res) => {
   try {
-    const removed = await db.deleteAnyRecord(req.user.userId, req.params.table, req.params.id);
-    if (removed === 0) return res.status(404).json({ error: 'Record not found.' });
+    const { affectedRows, fileUrl } = await db.deleteAnyRecord(req.user.userId, req.params.table, req.params.id);
+    if (affectedRows === 0) return res.status(404).json({ error: 'Record not found.' });
+    deleteLocalUploadFile(fileUrl);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -780,26 +865,24 @@ app.post('/api/metadata', upload.single('image'), async (req, res) => {
 });
 
 // ── File uploads ───────────────────────────────────────────────────────────────
-app.post('/api/upload-archive-image', uploadArchiveImage.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  const relPath = `u${req.user.userId}/archives/${req.file.filename}`;
-  res.json({ ok: true, imageUrl: `/uploads/${relPath}` });
-  pushToNAS(req.file.path, relPath); // best-effort, after the response — never blocks the upload
-});
-
-app.post('/api/upload-person-photo', uploadPersonPhoto.single('image'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No image file provided.' });
-  const relPath = `u${req.user.userId}/people/${req.file.filename}`;
-  res.json({ ok: true, imageUrl: `/uploads/${relPath}` });
-  pushToNAS(req.file.path, relPath);
-});
-
-app.post('/api/upload-source-file', uploadSourceFile.single('image'), async (req, res) => {
+// Shared upload handler: multer disk storage already wrote the file, so the
+// site always serves its own local copy — the NAS push below is a best-effort
+// mirror that runs after the response and never affects what gets served.
+function handleUpload(req, res, localPath) {
   if (!req.file) return res.status(400).json({ error: 'No file provided.' });
-  const relPath = `u${req.user.userId}/sources/${req.file.filename}`;
-  res.json({ ok: true, imageUrl: `/uploads/${relPath}` });
-  pushToNAS(req.file.path, relPath);
-});
+  res.json({ ok: true, imageUrl: localPath, storage: 'local' });
+  const remoteRelPath = localPath.replace(/^\/uploads\//, '');
+  pushToNAS(req.file.path, remoteRelPath);
+}
+
+app.post('/api/upload-archive-image', uploadArchiveImage.single('image'), (req, res) =>
+  handleUpload(req, res, `/uploads/u${req.user.userId}/archives/${req.file && req.file.filename}`));
+
+app.post('/api/upload-person-photo', uploadPersonPhoto.single('image'), (req, res) =>
+  handleUpload(req, res, `/uploads/u${req.user.userId}/people/${req.file && req.file.filename}`));
+
+app.post('/api/upload-source-file', uploadSourceFile.single('image'), (req, res) =>
+  handleUpload(req, res, `/uploads/u${req.user.userId}/sources/${req.file && req.file.filename}`));
 
 app.post('/api/save-archive', async (req, res) => {
   try {
@@ -842,7 +925,7 @@ app.post('/api/family-tree/reload', (req, res) => {
 });
 
 // ── Mango admin ───────────────────────────────────────────────────────────────
-app.patch('/api/mango/:id', async (req, res) => {
+app.patch('/api/mango/:id', requireAdmin, async (req, res) => {
   const { status } = req.body || {};
   const allowed = ['new','researching','sent','no reply'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
@@ -852,7 +935,7 @@ app.patch('/api/mango/:id', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/mango', requireAuth, async (req, res) => {
+app.get('/api/mango', requireAuth, requireAdmin, async (req, res) => {
   try {
     const rows = await db.mangoList({ status: req.query.status, q: req.query.q });
     res.json({ ok: true, rows });
