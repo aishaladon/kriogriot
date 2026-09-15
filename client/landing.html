@@ -904,24 +904,40 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
   document.addEventListener('pointerdown',unlock,{passive:true});
   document.addEventListener('keydown',unlock);
   document.addEventListener('touchstart',unlock,{passive:true});
-  function blip(){
+  function glassTink(){
     if(!ac || ac.state!=='running') return;
     var t=ac.currentTime;
     if(t-lastPlay<0.12) return;
     lastPlay=t;
-    var g=ac.createGain();
-    g.gain.setValueAtTime(0.0001,t);
-    g.gain.exponentialRampToValueAtTime(0.06,t+0.008);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);
-    g.connect(ac.destination);
-    var o=ac.createOscillator();
-    o.type='sine';
-    o.frequency.setValueAtTime(720,t);
-    o.frequency.exponentialRampToValueAtTime(1180,t+0.09);
-    o.connect(g);
-    o.start(t); o.stop(t+0.12);
+    var master=ac.createGain();
+    master.gain.value=0.05;
+    master.connect(ac.destination);
+    var bufLen=Math.max(1,Math.floor(ac.sampleRate*0.018));
+    var buf=ac.createBuffer(1,bufLen,ac.sampleRate);
+    var data=buf.getChannelData(0);
+    for(var i=0;i<bufLen;i++){ data[i]=(Math.random()*2-1)*(1-i/bufLen); }
+    var noise=ac.createBufferSource();
+    noise.buffer=buf;
+    var noiseFilter=ac.createBiquadFilter();
+    noiseFilter.type='highpass';
+    noiseFilter.frequency.value=3200;
+    var noiseGain=ac.createGain();
+    noiseGain.gain.setValueAtTime(0.45,t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001,t+0.02);
+    noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(master);
+    noise.start(t); noise.stop(t+0.025);
+    [3800,5200,6600].forEach(function(f,n){
+      var o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine';
+      o.frequency.setValueAtTime(f,t);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(1/(n+1.6),t+0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.15+n*0.03);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t+0.24);
+    });
   }
-  els.forEach(function(el){ el.addEventListener('mouseenter',blip); });
+  els.forEach(function(el){ el.addEventListener('mouseenter',glassTink); });
 })();
 </script>
 
