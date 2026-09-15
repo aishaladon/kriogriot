@@ -963,27 +963,44 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
   function iconHum(){
     if(!ac || ac.state!=='running') return;
     var t=ac.currentTime;
-    if(t-lastHum<0.15) return;
+    if(t-lastHum<0.18) return;
     lastHum=t;
     var master=ac.createGain();
     master.gain.setValueAtTime(0.0001,t);
-    master.gain.exponentialRampToValueAtTime(0.06,t+0.05);
-    master.gain.exponentialRampToValueAtTime(0.0001,t+0.34);
+    master.gain.exponentialRampToValueAtTime(0.09,t+0.018);
+    master.gain.exponentialRampToValueAtTime(0.0001,t+0.28);
     master.connect(ac.destination);
-    var filter=ac.createBiquadFilter();
-    filter.type='lowpass';
-    filter.Q.value=1.1;
-    filter.frequency.setValueAtTime(260,t);
-    filter.frequency.exponentialRampToValueAtTime(1900,t+0.12);
-    filter.frequency.exponentialRampToValueAtTime(420,t+0.34);
-    filter.connect(master);
-    [1,1.008,0.993].forEach(function(det){
+
+    // whoosh: bandpass-swept noise, like air moving past
+    var bufLen=Math.floor(ac.sampleRate*0.3);
+    var buf=ac.createBuffer(1,bufLen,ac.sampleRate);
+    var data=buf.getChannelData(0);
+    for(var i=0;i<bufLen;i++){ data[i]=Math.random()*2-1; }
+    var noise=ac.createBufferSource();
+    noise.buffer=buf;
+    var bp=ac.createBiquadFilter();
+    bp.type='bandpass';
+    bp.Q.value=6;
+    bp.frequency.setValueAtTime(500,t);
+    bp.frequency.exponentialRampToValueAtTime(3200,t+0.08);
+    bp.frequency.exponentialRampToValueAtTime(450,t+0.26);
+    noise.connect(bp); bp.connect(master);
+    noise.start(t); noise.stop(t+0.3);
+
+    // core buzz: pitch drops fast through a resonant lowpass, like a swing settling
+    var lp=ac.createBiquadFilter();
+    lp.type='lowpass';
+    lp.Q.value=4;
+    lp.frequency.setValueAtTime(2400,t);
+    lp.frequency.exponentialRampToValueAtTime(500,t+0.26);
+    lp.connect(master);
+    [1,1.01,0.99].forEach(function(det){
       var o=ac.createOscillator();
       o.type='sawtooth';
-      o.frequency.setValueAtTime(170*det,t);
-      o.frequency.exponentialRampToValueAtTime(215*det,t+0.16);
-      o.connect(filter);
-      o.start(t); o.stop(t+0.36);
+      o.frequency.setValueAtTime(520*det,t);
+      o.frequency.exponentialRampToValueAtTime(160*det,t+0.26);
+      o.connect(lp);
+      o.start(t); o.stop(t+0.3);
     });
   }
   [].slice.call(document.querySelectorAll('.legend figure')).forEach(function(el){
