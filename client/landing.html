@@ -251,6 +251,11 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
   font-size:11px;color:var(--pale);text-align:center;margin:10px 0 0}
 @media(max-width:860px){.plans{grid-template-columns:1fr}}
 .brkS{padding:52px 0 56px}
+.brk-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+  gap:44px;align-items:stretch;margin-bottom:6px}
+.brk-video{width:100%;height:100%;min-height:220px;object-fit:cover;display:block}
+@media(max-width:820px){.brk-hero{grid-template-columns:1fr;gap:24px}
+  .brk-video{min-height:0;aspect-ratio:16/9;height:auto}}
 .band{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
   gap:26px;align-items:center;border:1px solid var(--rule);padding:24px;margin:28px 0 34px}
 .band h3{font-size:12px;letter-spacing:.13em;margin:0 0 10px;font-weight:600}
@@ -578,9 +583,17 @@ table.cmp-t tbody tr:last-child td{border-bottom:0}
 
 <section class="brkS" id="break">
 <div class="wrap">
-  <p class="eyebrow">The hardest problem in American genealogy</p>
-  <h2>Where the census stops,<br class="brk"> I keep going.</h2>
-  <p class="body">In 1870 the federal census named formerly enslaved people as free individuals for the first time. Before that year, most tools go quiet. These are the record sets that name your people through the break — and where they name no one, I say so.</p>
+  <div class="brk-hero">
+    <div class="brk-copy">
+      <p class="eyebrow">The hardest problem in American genealogy</p>
+      <h2>Where the census stops,<br class="brk"> I keep going.</h2>
+      <p class="body">In 1870 the federal census named formerly enslaved people as free individuals for the first time. Before that year, most tools go quiet. These are the record sets that name your people through the break — and where they name no one, I say so.</p>
+    </div>
+    <video class="brk-video" autoplay muted loop playsinline aria-hidden="true">
+      <source src="assets/video/research-example.mp4" type="video/mp4">
+    </video>
+    <script>document.currentScript.previousElementSibling.playbackRate = 2;</script>
+  </div>
 
   <div class="band">
     <div class="b1">
