@@ -1356,6 +1356,52 @@ function launchResearchForAncestor(ancestorId) {
   document.getElementById('findings-ancestor-input').value    = ancestorId;
 }
 
+// ── Research Agent sound effects (typing tick + completion chime) ────────────
+let _researchAc = null;
+function _researchAudio() {
+  if (!_researchAc) {
+    try { _researchAc = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  if (_researchAc.state === 'suspended') { try { _researchAc.resume(); } catch (e) {} }
+  return _researchAc;
+}
+let _lastTick = 0;
+function playResearchTick() {
+  const ac = _researchAudio();
+  if (!ac || ac.state !== 'running') return;
+  const t = ac.currentTime;
+  if (t - _lastTick < 0.045) return;
+  _lastTick = t;
+  const freq = 2200 + Math.random() * 1400;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'square';
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.035, t + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t); o.stop(t + 0.035);
+}
+function playResearchDone() {
+  const ac = _researchAudio();
+  if (!ac || ac.state !== 'running') return;
+  const t = ac.currentTime;
+  const master = ac.createGain();
+  master.gain.value = 0.07;
+  master.connect(ac.destination);
+  [1568, 1975, 2637].forEach((f, n) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f, t + n * 0.05);
+    g.gain.setValueAtTime(0.0001, t + n * 0.05);
+    g.gain.exponentialRampToValueAtTime(1 / (n + 1.3), t + n * 0.05 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + n * 0.05 + 0.5);
+    o.connect(g); g.connect(master);
+    o.start(t + n * 0.05); o.stop(t + n * 0.05 + 0.6);
+  });
+}
+
 // ── Research Agent ────────────────────────────────────────────────────────────
 async function runResearch() {
   const name      = document.getElementById('r-name').value.trim();
@@ -1368,6 +1414,8 @@ async function runResearch() {
     showAlert('research-alert', 'Please enter an ancestor name.', 'error');
     return;
   }
+
+  _researchAudio(); // unlock/create the AudioContext while still inside the click gesture
 
   state.researchName = name;
 
@@ -1419,10 +1467,13 @@ async function runResearch() {
             state.currentResearch += text;
             outputEl.innerHTML = renderMarkdown(state.currentResearch);
             outputEl.scrollTop = outputEl.scrollHeight;
+            playResearchTick();
           }
         } catch { /* non-JSON line */ }
       }
     }
+
+    playResearchDone();
 
     // Parse findings and show save panel
     state.parsedFindings = parseFindings(state.currentResearch);
