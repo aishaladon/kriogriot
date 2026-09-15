@@ -150,7 +150,17 @@ p.body{font-size:17.5px;color:var(--body);max-width:62ch;margin:0}
 .wall{padding:52px 0 56px;background:var(--harbour)}
 .wall p.body{margin-bottom:30px}
 .tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;margin:30px 0 0}
-.tool{border-left:2px solid var(--green);padding:2px 0 2px 18px;margin:0}
+.tool{position:relative;overflow:hidden;margin:0;padding:24px 22px 22px;border-radius:16px;
+  border:1px solid rgba(255,255,255,.14);border-top:2px solid var(--green);
+  background:rgba(255,255,255,.055);
+  backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);
+  box-shadow:0 10px 30px rgba(2,10,22,.4), inset 0 1px 0 rgba(255,255,255,.1)}
+.tool::before{content:'';position:absolute;width:180px;height:180px;border-radius:50%;
+  filter:blur(50px);opacity:.5;z-index:0;pointer-events:none}
+.tool:nth-child(1)::before{background:var(--green);top:-60px;left:-50px}
+.tool:nth-child(2)::before{background:var(--blue);top:-50px;right:-60px}
+.tool:nth-child(3)::before{background:var(--mango);bottom:-70px;left:20%}
+.tool>*{position:relative;z-index:1}
 .tnum{font-size:11.5px;letter-spacing:.12em;color:var(--green);margin:0 0 6px}
 .tool h4{font-size:19px;margin:0 0 10px;color:var(--white);font-weight:600;line-height:1.25}
 .tool p{font-size:15.5px;line-height:1.6;color:var(--body);margin:0 0 14px;max-width:none}
