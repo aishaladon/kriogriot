@@ -2500,6 +2500,7 @@ async function processBulkQueue() {
   progressEl.style.display = 'block';
   resultsEl.innerHTML      = '';
   state.bulkResults        = [];
+  startScanLoop();
 
   for (let i = 0; i < state.bulkQueue.length; i++) {
     const file = state.bulkQueue[i];
@@ -2532,6 +2533,8 @@ async function processBulkQueue() {
 
   barEl.style.width   = '100%';
   labelEl.textContent = `Done — ${state.bulkQueue.length} images processed.`;
+  stopScanLoop();
+  playScanDone();
 }
 
 async function saveBulkResult(index) {
