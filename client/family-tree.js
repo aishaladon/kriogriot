@@ -11,11 +11,11 @@
   'use strict';
 
   /* ── Card geometry ─────────────────────────────────────────────────── */
-  const CW   = 196;   // card width
-  const CH   = 84;    // card height
-  const CR   = 10;    // card corner radius
-  const AR   = 22;    // avatar circle radius
-  const AX   = -CW / 2 + AR + 10;  // avatar center-x (card-local)
+  const CW   = 232;   // card width
+  const CH   = 104;   // card height
+  const CR   = 12;    // card corner radius
+  const AR   = 26;    // avatar circle radius
+  const AX   = -CW / 2 + AR + 12;  // avatar center-x (card-local)
 
   /* ── Tree spacing ──────────────────────────────────────────────────── */
   // d3.tree().nodeSize([y-gap-between-siblings, x-gap-between-generations])
@@ -23,7 +23,7 @@
   const V_NODE = [CW + 60, CH + 60];   // vertical layout
 
   /* ── Toggle button ─────────────────────────────────────────────────── */
-  const TB_R  = 10;   // toggle circle radius
+  const TB_R  = 11;   // toggle circle radius
   const TB_X  = CW / 2 - 1;  // offset from card centre (right edge)
 
   /* ── Module state ──────────────────────────────────────────────────── */
@@ -474,19 +474,19 @@
         .text('⊕');
 
     /* ── Text content ── */
-    const TX      = AX + AR + 12;   // for real people (after avatar)
-    const TX_VIRT = -CW / 2 + 52;  // for virtual nodes (after group icon)
+    const TX      = AX + AR + 14;   // for real people (after avatar)
+    const TX_VIRT = -CW / 2 + 58;  // for virtual nodes (after group icon)
 
     nodeEnter.append('text')
       .attr('class', 'ft-card-name')
       .attr('x', d => d.data._isVirtual ? TX_VIRT : TX)
-      .attr('y', -20)
+      .attr('y', -26)
       .text(d => d.data._displayName);
 
     nodeEnter.append('text')
       .attr('class', 'ft-card-dates')
       .attr('x', d => d.data._isVirtual ? TX_VIRT : TX)
-      .attr('y', -4)
+      .attr('y', -5)
       .text(d => {
         if (d.data._isVirtual) return '';
         const b = d.data._birthYear ? `b. ${d.data._birthYear}` : '';
@@ -498,7 +498,7 @@
     nodeEnter.append('text')
       .attr('class', 'ft-card-relation')
       .attr('x', d => d.data._isVirtual ? TX_VIRT : TX)
-      .attr('y', 14)
+      .attr('y', 20)
       .text(d => trunc(d.data.relation, 30));
 
     /* ── Expand / collapse toggle ── */

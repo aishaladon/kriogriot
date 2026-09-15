@@ -178,37 +178,37 @@
 /* Link lines between nodes */
 .ft-link {
   fill: none;
-  stroke: #2d2820;
+  stroke: rgba(199, 221, 243, 0.3);
   stroke-width: 1.8;
   stroke-linecap: round;
 }
 
 /* Card rectangle */
 .ft-card-bg {
-  fill: #1a1712;
-  stroke: rgba(201, 168, 76, 0.22);
+  fill: #04223F;
+  stroke: rgba(61, 220, 132, 0.28);
   stroke-width: 1.5;
-  rx: 10;
+  rx: 12;
   transition: stroke 0.15s, filter 0.15s;
   filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
 }
 
 .ft-node:hover .ft-card-bg {
-  stroke: rgba(201, 168, 76, 0.7);
+  stroke: rgba(61, 220, 132, 0.9);
   stroke-width: 2;
-  filter: drop-shadow(0 4px 14px rgba(201, 168, 76, 0.18));
+  filter: drop-shadow(0 0 10px rgba(61, 220, 132, 0.45));
 }
 
-/* Highlighted (search match) */
+/* Highlighted (search match) — blue, distinct from the green hover glow */
 .ft-card-bg.ft-highlighted {
-  stroke: #c9a84c !important;
+  stroke: #6FA9E0 !important;
   stroke-width: 2.5 !important;
-  filter: drop-shadow(0 0 12px rgba(201, 168, 76, 0.45)) !important;
+  filter: drop-shadow(0 0 12px rgba(111, 169, 224, 0.55)) !important;
 }
 
-/* Root node card gets slightly brighter border */
+/* Root node card gets a blue border — the tree's anchor point */
 .ft-root-node .ft-card-bg {
-  stroke: rgba(201, 168, 76, 0.5);
+  stroke: rgba(111, 169, 224, 0.6);
   stroke-width: 2;
 }
 
@@ -218,67 +218,67 @@
 }
 
 .ft-avatar-m {
-  fill: #1a2233;
-  stroke: rgba(100, 140, 210, 0.35);
+  fill: #0d2440;
+  stroke: rgba(111, 169, 224, 0.5);
 }
 
 .ft-avatar-f {
-  fill: #271a2e;
-  stroke: rgba(200, 120, 200, 0.35);
+  fill: #0d2a1a;
+  stroke: rgba(61, 220, 132, 0.5);
 }
 
 .ft-avatar-u {
-  fill: #1f1d17;
-  stroke: rgba(140, 128, 100, 0.3);
+  fill: #1c2430;
+  stroke: rgba(199, 221, 243, 0.3);
 }
 
 /* Avatar icon (sex symbol or ?) */
 .ft-avatar-icon {
-  fill: #6a6050;
-  font-size: 15px;
+  fill: #C7DDF3;
+  font-size: 16px;
   dominant-baseline: central;
   font-family: 'Inter', sans-serif;
 }
 
 /* Card text */
 .ft-card-name {
-  fill: #c9a84c;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 12px;
-  font-weight: 600;
+  fill: #F0F6FC;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .ft-card-dates {
-  fill: #7a7060;
+  fill: #C7DDF3;
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
 }
 
 .ft-card-relation {
-  fill: #5a5040;
+  fill: rgba(199, 221, 243, 0.65);
   font-family: 'Inter', sans-serif;
-  font-size: 9.5px;
+  font-size: 11px;
   font-style: italic;
 }
 
 /* Expand / collapse toggle button */
 .ft-toggle-bg {
-  fill: #2a2518;
-  stroke: rgba(201, 168, 76, 0.4);
+  fill: #0d2a1a;
+  stroke: rgba(61, 220, 132, 0.4);
   stroke-width: 1.2;
   cursor: pointer;
   transition: fill .15s;
 }
 
 .ft-toggle-bg:hover {
-  fill: #3a3420;
-  stroke: #c9a84c;
+  fill: #123a24;
+  stroke: #3DDC84;
 }
 
 .ft-toggle-label {
-  fill: #c9a84c;
-  font-size: 12px;
+  fill: #3DDC84;
+  font-size: 13px;
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   dominant-baseline: central;
@@ -288,20 +288,20 @@
 
 /* Virtual "Unlinked People" group node */
 .ft-card-virtual {
-  fill: #141210 !important;
-  stroke: rgba(100, 88, 50, 0.35) !important;
+  fill: #062F58 !important;
+  stroke: rgba(199, 221, 243, 0.3) !important;
   stroke-dasharray: 4 3;
 }
 
 /* Generation badge */
 .ft-gen-badge {
-  fill: rgba(201, 168, 76, 0.1);
-  stroke: rgba(201, 168, 76, 0.2);
+  fill: rgba(61, 220, 132, 0.1);
+  stroke: rgba(61, 220, 132, 0.2);
   stroke-width: 1;
 }
 
 .ft-gen-label {
-  fill: #6a5c30;
+  fill: #3DDC84;
   font-size: 8.5px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
@@ -316,7 +316,7 @@
   position: absolute;
   bottom: 16px;
   left: 16px;
-  background: rgba(26, 23, 18, 0.85);
+  background: rgba(4, 34, 63, 0.9);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 10px 14px;
@@ -340,15 +340,15 @@
 .ft-legend-line {
   width: 24px;
   height: 2px;
-  background: #2d2820;
+  background: rgba(199, 221, 243, 0.3);
   border-radius: 1px;
 }
 
 .ft-legend-card {
   width: 14px;
   height: 10px;
-  background: #1a1712;
-  border: 1px solid rgba(201,168,76,.3);
+  background: #04223F;
+  border: 1px solid rgba(61,220,132,.4);
   border-radius: 2px;
 }
 
@@ -386,26 +386,26 @@
   align-items: center;
   gap: 12px;
   padding: 8px 14px;
-  background: rgba(201, 168, 76, 0.1);
-  border: 1px solid rgba(201, 168, 76, 0.3);
+  background: rgba(111, 169, 224, 0.12);
+  border: 1px solid rgba(111, 169, 224, 0.35);
   border-radius: var(--radius);
   margin-bottom: 10px;
   font-size: .82rem;
-  color: #c9a84c;
+  color: #6FA9E0;
   font-weight: 600;
 }
 
 .ft-edit-banner-hint {
-  color: #a08838;
+  color: rgba(111, 169, 224, 0.75);
   font-weight: 400;
   font-size: .8rem;
 }
 
 .ft-edit-banner-close {
   margin-left: auto;
-  background: rgba(201,168,76,0.2);
-  border: 1px solid rgba(201,168,76,0.4);
-  color: #c9a84c;
+  background: rgba(111, 169, 224, 0.2);
+  border: 1px solid rgba(111, 169, 224, 0.4);
+  color: #6FA9E0;
   border-radius: var(--radius);
   padding: 3px 12px;
   cursor: pointer;
@@ -415,20 +415,20 @@
 }
 
 .ft-edit-banner-close:hover {
-  background: rgba(201,168,76,0.35);
+  background: rgba(111, 169, 224, 0.35);
 }
 
 /* ── Edit mode: highlight card borders ───────────────────────────────────── */
 .ft-edit-active .ft-card-bg {
-  stroke: rgba(201, 168, 76, 0.45) !important;
+  stroke: rgba(111, 169, 224, 0.55) !important;
 }
 
 /* ── Card context menu ────────────────────────────────────────────────────── */
 .ft-context-menu {
   position: fixed;
   z-index: 2000;
-  background: #1e1c17;
-  border: 1px solid rgba(201, 168, 76, 0.45);
+  background: #062F58;
+  border: 1px solid rgba(61, 220, 132, 0.45);
   border-radius: var(--radius);
   box-shadow: 0 8px 32px rgba(0,0,0,0.65);
   min-width: 170px;
@@ -438,12 +438,12 @@
 
 .ft-ctx-name {
   padding: 7px 14px 6px;
-  font-size: .76rem;
-  color: #c9a84c;
-  font-weight: 600;
+  font-size: .8rem;
+  color: #3DDC84;
+  font-weight: 700;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   margin-bottom: 4px;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -465,8 +465,8 @@
 }
 
 .ft-ctx-btn:hover {
-  background: rgba(201, 168, 76, 0.1);
-  color: #c9a84c;
+  background: rgba(61, 220, 132, 0.1);
+  color: #3DDC84;
 }
 
 .ft-ctx-cancel {
@@ -483,10 +483,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 2100;
-  background: #1e1c17;
-  border: 1px solid rgba(201, 168, 76, 0.4);
+  background: #062F58;
+  border: 1px solid rgba(61, 220, 132, 0.4);
   border-radius: calc(var(--radius) + 2px);
-  box-shadow: 0 12px 48px rgba(0,0,0,0.75);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.75), 0 0 30px rgba(61,220,132,.15);
   width: 420px;
   max-width: 95vw;
   display: flex;
@@ -502,10 +502,10 @@
 }
 
 .ft-connect-header span {
-  font-size: .9rem;
-  font-weight: 600;
-  color: #c9a84c;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-size: .95rem;
+  font-weight: 700;
+  color: #3DDC84;
+  font-family: 'Inter', sans-serif;
 }
 
 .ft-connect-close {
@@ -565,9 +565,9 @@
 .ft-connect-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(61,220,132,.15), 0 0 12px rgba(61,220,132,.3); }
 
 .ft-connect-input.ft-selected {
-  border-color: rgba(201, 168, 76, 0.6);
-  background: rgba(201, 168, 76, 0.06);
-  color: #c9a84c;
+  border-color: rgba(61, 220, 132, 0.6);
+  background: rgba(61, 220, 132, 0.06);
+  color: #3DDC84;
 }
 
 .ft-connect-dropdown {
@@ -575,8 +575,8 @@
   top: calc(100% + 3px);
   left: 0;
   right: 0;
-  background: #1a1712;
-  border: 1px solid rgba(201, 168, 76, 0.3);
+  background: #062F58;
+  border: 1px solid rgba(61, 220, 132, 0.3);
   border-radius: var(--radius);
   box-shadow: 0 6px 20px rgba(0,0,0,0.6);
   max-height: 180px;
@@ -597,7 +597,7 @@
   flex-direction: column;
 }
 
-.ft-dropdown-item:hover { background: rgba(201, 168, 76, 0.1); }
+.ft-dropdown-item:hover { background: rgba(61, 220, 132, 0.1); }
 
 .ft-dropdown-item-name { font-weight: 500; }
 
