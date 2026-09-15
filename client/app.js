@@ -2262,6 +2262,21 @@ function isScannable(file) {
   return file.type.startsWith('image/') || file.type === 'application/pdf';
 }
 
+// Metadata generation goes through an async FileReader callback, which isn't
+// always treated as a direct continuation of the click that started it, so
+// unlock the scan AudioContext on the first real gesture anywhere on the page.
+(function () {
+  function unlockScanAudio() {
+    _scanAudio();
+    document.removeEventListener('pointerdown', unlockScanAudio);
+    document.removeEventListener('keydown', unlockScanAudio);
+    document.removeEventListener('touchstart', unlockScanAudio);
+  }
+  document.addEventListener('pointerdown', unlockScanAudio, { passive: true });
+  document.addEventListener('keydown', unlockScanAudio);
+  document.addEventListener('touchstart', unlockScanAudio, { passive: true });
+})();
+
 function handleFiles(files) {
   const accepted = files.filter(isScannable);
   if (!accepted.length) return;
@@ -2300,6 +2315,61 @@ function processSingleFile(file) {
   reader.readAsDataURL(file);
 }
 
+// ── Archive Scanner sound effects (scan sweep loop + completion chime) ───────
+let _scanAc = null;
+function _scanAudio() {
+  if (!_scanAc) {
+    try { _scanAc = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  if (_scanAc.state === 'suspended') { try { _scanAc.resume(); } catch (e) {} }
+  return _scanAc;
+}
+function playScanSweep() {
+  const ac = _scanAudio();
+  if (!ac || ac.state !== 'running') return;
+  const t = ac.currentTime;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.045, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+  g.connect(ac.destination);
+  const o = ac.createOscillator();
+  o.type = 'square';
+  o.frequency.setValueAtTime(900, t);
+  o.frequency.exponentialRampToValueAtTime(1500, t + 0.09);
+  o.connect(g);
+  o.start(t); o.stop(t + 0.12);
+}
+function playScanDone() {
+  const ac = _scanAudio();
+  if (!ac || ac.state !== 'running') return;
+  const t = ac.currentTime;
+  const master = ac.createGain();
+  master.gain.value = 0.07;
+  master.connect(ac.destination);
+  [1200, 1800].forEach((f, n) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f, t + n * 0.09);
+    g.gain.setValueAtTime(0.0001, t + n * 0.09);
+    g.gain.exponentialRampToValueAtTime(1 / (n + 1.2), t + n * 0.09 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + n * 0.09 + 0.4);
+    o.connect(g); g.connect(master);
+    o.start(t + n * 0.09); o.stop(t + n * 0.09 + 0.45);
+  });
+}
+let _scanTimer = null;
+function startScanLoop() {
+  _scanAudio();
+  stopScanLoop();
+  playScanSweep();
+  _scanTimer = setInterval(playScanSweep, 420);
+}
+function stopScanLoop() {
+  if (_scanTimer) { clearInterval(_scanTimer); _scanTimer = null; }
+}
+
 async function generateMetadataForCurrent() {
   const spinnerEl  = document.getElementById('preview-spinner');
   const resultEl   = document.getElementById('metadata-result');
@@ -2308,6 +2378,7 @@ async function generateMetadataForCurrent() {
   spinnerEl.style.display = 'inline-flex';
   resultEl.classList.remove('active');
   state.currentMetadata = null;
+  startScanLoop();
 
   try {
     const metadata = await api('/api/metadata', {
@@ -2320,10 +2391,14 @@ async function generateMetadataForCurrent() {
     state.currentMetadata = metadata;
     renderMetadataFields(metadata, 'metadata-fields');
     resultEl.classList.add('active');
+    stopScanLoop();
+    playScanDone();
   } catch (err) {
+    stopScanLoop();
     showAlert('archive-alert', `Metadata error: ${err.message}`, 'error');
   } finally {
     spinnerEl.style.display = 'none';
+    stopScanLoop();
   }
 }
 
