@@ -2315,7 +2315,7 @@ function processSingleFile(file) {
   reader.readAsDataURL(file);
 }
 
-// ── Archive Scanner sound effects (scan sweep loop + completion chime) ───────
+// ── Archive Scanner sound effects (scan loop audio + completion chime) ───────
 let _scanAc = null;
 function _scanAudio() {
   if (!_scanAc) {
@@ -2325,46 +2325,9 @@ function _scanAudio() {
   if (_scanAc.state === 'suspended') { try { _scanAc.resume(); } catch (e) {} }
   return _scanAc;
 }
-function playScanSweep() {
-  const ac = _scanAudio();
-  if (!ac || ac.state !== 'running') return;
-  const t = ac.currentTime;
-
-  // tone: sweeps up then back down, like a scan head passing over and returning
-  const g = ac.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.04, t + 0.012);
-  g.gain.exponentialRampToValueAtTime(0.04, t + 0.1);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.17);
-  g.connect(ac.destination);
-  const o = ac.createOscillator();
-  o.type = 'sawtooth';
-  o.frequency.setValueAtTime(650, t);
-  o.frequency.linearRampToValueAtTime(1750, t + 0.085);
-  o.frequency.linearRampToValueAtTime(650, t + 0.17);
-  o.connect(g);
-  o.start(t); o.stop(t + 0.18);
-
-  // texture: a thin band-passed noise line under the sweep, for a "reading a line" feel
-  const bufLen = Math.floor(ac.sampleRate * 0.17);
-  const buf = ac.createBuffer(1, bufLen, ac.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
-  const noise = ac.createBufferSource();
-  noise.buffer = buf;
-  const bp = ac.createBiquadFilter();
-  bp.type = 'bandpass';
-  bp.Q.value = 10;
-  bp.frequency.setValueAtTime(650, t);
-  bp.frequency.linearRampToValueAtTime(1750, t + 0.085);
-  bp.frequency.linearRampToValueAtTime(650, t + 0.17);
-  const ng = ac.createGain();
-  ng.gain.setValueAtTime(0.0001, t);
-  ng.gain.exponentialRampToValueAtTime(0.05, t + 0.012);
-  ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.17);
-  noise.connect(bp); bp.connect(ng); ng.connect(ac.destination);
-  noise.start(t); noise.stop(t + 0.18);
-}
+const _scanLoopAudio = new Audio('assets/audio/scanner-tick.mp3');
+_scanLoopAudio.loop = true;
+_scanLoopAudio.preload = 'auto';
 function playScanDone() {
   const ac = _scanAudio();
   if (!ac || ac.state !== 'running') return;
@@ -2383,15 +2346,12 @@ function playScanDone() {
     o.start(t + n * 0.09); o.stop(t + n * 0.09 + 0.45);
   });
 }
-let _scanTimer = null;
 function startScanLoop() {
   _scanAudio();
-  stopScanLoop();
-  playScanSweep();
-  _scanTimer = setInterval(playScanSweep, 420);
+  try { _scanLoopAudio.currentTime = 0; _scanLoopAudio.play().catch(() => {}); } catch (e) {}
 }
 function stopScanLoop() {
-  if (_scanTimer) { clearInterval(_scanTimer); _scanTimer = null; }
+  try { _scanLoopAudio.pause(); _scanLoopAudio.currentTime = 0; } catch (e) {}
 }
 
 async function generateMetadataForCurrent() {

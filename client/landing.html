@@ -966,8 +966,14 @@ table.cmp-t tbody tr:not(.grp):hover td.ft{color:var(--white);
     });
   }
   els.forEach(function(el){ el.addEventListener('mouseenter',glassTink); });
+
+  var iconSound=new Audio('assets/audio/icon-hover.mp3');
+  iconSound.preload='auto';
+  function playIconSound(){
+    try{ iconSound.currentTime=0; iconSound.play().catch(function(){}); }catch(e){}
+  }
   [].slice.call(document.querySelectorAll('.legend figure')).forEach(function(el){
-    el.addEventListener('mouseenter',glassTink);
+    el.addEventListener('mouseenter',playIconSound);
   });
 })();
 </script>
