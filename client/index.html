@@ -475,20 +475,20 @@
       <div class="form-row">
         <div class="form-group">
           <label>Ancestor Name *</label>
-          <input id="r-name" type="text" placeholder="e.g. Mary Jane Washington" />
+          <input id="r-name" type="text" placeholder="e.g. Mary Jane Washington" autocomplete="off" />
         </div>
         <div class="form-group">
           <label>Birth Year</label>
-          <input id="r-birth" type="text" placeholder="e.g. 1842 or c.1840s" />
+          <input id="r-birth" type="text" placeholder="e.g. 1842 or c.1840s" autocomplete="off" />
         </div>
       </div>
       <div class="form-group">
         <label>Known Locations</label>
-        <input id="r-location" type="text" placeholder="e.g. Prince George's County, MD; Georgetown, DC" />
+        <input id="r-location" type="text" placeholder="e.g. Prince George's County, MD; Georgetown, DC" autocomplete="off" />
       </div>
       <div class="form-group">
         <label>Known Relatives</label>
-        <input id="r-relatives" type="text" placeholder="e.g. Husband: Thomas Washington; Children: James, Sarah" />
+        <input id="r-relatives" type="text" placeholder="e.g. Husband: Thomas Washington; Children: James, Sarah" autocomplete="off" />
       </div>
       <div class="form-group">
         <label>Research Questions</label>
@@ -499,6 +499,7 @@
           Run AI Research
         </button>
         <button class="btn btn-secondary" onclick="clearResearch()">Clear</button>
+        <button class="btn btn-secondary" onclick="downloadResearchPDF()">Download PDF</button>
         <span id="research-spinner" style="display:none;"><span class="spinner"></span> Searching databases…</span>
       </div>
     </div>
@@ -552,6 +553,9 @@
         <button class="btn btn-primary btn-sm" onclick="sendChat()">Send</button>
       </div>
     </div>
+
+    <!-- Printable report — hidden on screen, shown only when downloadResearchPDF() triggers print -->
+    <div id="research-print-area" class="print-only"></div>
   </section>
 
   <!-- Archive Scanner -->
@@ -800,11 +804,11 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div class="form-group">
             <label>First Name</label>
-            <input id="profile-first" type="text" placeholder="First name" />
+            <input id="profile-first" type="text" placeholder="First name" autocomplete="off" />
           </div>
           <div class="form-group">
             <label>Last Name</label>
-            <input id="profile-last" type="text" placeholder="Last name" />
+            <input id="profile-last" type="text" placeholder="Last name" autocomplete="off" />
           </div>
         </div>
         <div class="form-group" style="margin-bottom:14px;">
@@ -989,11 +993,11 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
             <div class="form-group">
               <label>First Name</label>
-              <input id="uf-first" type="text" placeholder="First" />
+              <input id="uf-first" type="text" placeholder="First" autocomplete="off" />
             </div>
             <div class="form-group">
               <label>Last Name</label>
-              <input id="uf-last" type="text" placeholder="Last" />
+              <input id="uf-last" type="text" placeholder="Last" autocomplete="off" />
             </div>
           </div>
           <div class="form-group" style="margin-bottom:14px;">

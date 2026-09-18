@@ -1929,4 +1929,28 @@ details[open] .faq-q::before { content: '−'; }
   padding: 0 4px 14px 24px;
   margin: 0;
 }
+
+/* ── Research report print/PDF export ─────────────────────────────────────── */
+.print-only { display: none; }
+@media print {
+  body { background: #fff !important; }
+  body * { visibility: hidden; }
+  .print-only, .print-only * { visibility: visible; }
+  .print-only {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: #000;
+    background: #fff;
+  }
+  .print-report h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .print-report .print-meta { font-size: .85rem; color: #444; margin-bottom: 14px; }
+  .print-report h2 { font-size: 1.1rem; margin: 22px 0 8px; }
+  .print-report h3 { font-size: 1rem; margin: 14px 0 6px; }
+  .print-report p { line-height: 1.6; margin: 0 0 10px; }
+  .print-report a { color: #000 !important; text-decoration: underline; }
+  .print-chat-msg { margin: 0 0 12px; line-height: 1.6; }
+}
 .faq-a a { color: var(--green); }

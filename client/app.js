@@ -1600,6 +1600,38 @@ async function sendChat() {
   }
 }
 
+// ── Download research report (+ any follow-up chat) as a PDF ────────────────────
+function downloadResearchPDF() {
+  if (!state.currentResearch) {
+    showAlert('research-alert', 'Run a search first, then download the report.', 'error');
+    return;
+  }
+
+  const name    = state.researchName || document.getElementById('r-name').value.trim() || 'Ancestor';
+  const dateStr = new Date().toLocaleDateString();
+
+  let html = `
+    <div class="print-report">
+      <h1>Krio Griot — Research Report</h1>
+      <div class="print-meta">Ancestor: ${escHtml(name)} &middot; Generated ${escHtml(dateStr)}</div>
+      <div class="print-section">${renderMarkdown(state.currentResearch)}</div>`;
+
+  // Follow-up Q&A — skip the seeded initial user/assistant pair, that's the report above
+  const followUps = (state.chatHistory || []).slice(2);
+  if (followUps.length) {
+    html += `<h2>Follow-up Questions</h2>`;
+    for (const msg of followUps) {
+      const label = msg.role === 'user' ? 'Question' : 'Response';
+      html += `<div class="print-chat-msg"><strong>${escHtml(label)}:</strong> ${renderMarkdown(msg.content)}</div>`;
+    }
+  }
+
+  html += `</div>`;
+
+  document.getElementById('research-print-area').innerHTML = html;
+  window.print();
+}
+
 // ── Full-table pages ──────────────────────────────────────────────────────────
 let allQuestionsCache    = [];
 let activeQFilter        = 'all';
@@ -3240,7 +3272,7 @@ function renderModalForm(tableName, record) {
     let input = '';
 
     if (f.type === 'textarea') {
-      input = `<textarea id="${fid}" rows="3">${escHtml(curStr)}</textarea>`;
+      input = `<textarea id="${fid}" rows="3" autocomplete="off">${escHtml(curStr)}</textarea>`;
 
     } else if (f.type === 'select') {
       const opts = (f.options || []).map(o =>
@@ -3321,7 +3353,7 @@ function renderModalForm(tableName, record) {
       input = `<div class="multicheck-grid" id="${fid}-grid">${items}</div>`;
 
     } else {
-      input = `<input type="text" id="${fid}" value="${escHtml(curStr)}" />`;
+      input = `<input type="text" id="${fid}" value="${escHtml(curStr)}" autocomplete="off" />`;
     }
 
     const labelHtml = f.type === 'checkbox'
